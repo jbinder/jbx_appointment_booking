@@ -32,21 +32,21 @@ require_once(PATH_tslib.'class.tslib_pibase.php');
 
 
 /**
- * Plugin 'Appointment Booking' for the 'appointment_booking' extension.
+ * Plugin 'Appointment Booking' for the 'jbx_appointment_booking' extension.
  *
  * @author    Johannes Binder <j.binder.x@gmail.com>
  * @package    TYPO3
  * @subpackage    tx_appointmentbooking
  */
-class tx_appointmentbooking_pi1 extends tslib_pibase {
+class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $prefixId      = 'tx_appointmentbooking_pi1';        // Same as class name
     var $scriptRelPath = 'pi1/class.tx_appointmentbooking_pi1.php';    // Path to this script relative to the extension dir.
-    var $extKey        = 'appointment_booking';    // The extension key.
+    var $extKey        = 'jbx_appointment_booking';    // The extension key.
 
     var $default_conf = array(
-            'templateFile' => 'EXT:appointment_booking/tpl/appointment_booking_month.html',
+            'templateFile' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
         );
-    
+
     /**
      * The main method of the PlugIn
      *
@@ -82,8 +82,8 @@ class tx_appointmentbooking_pi1 extends tslib_pibase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php'])    {
-    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php']);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_appointmentbooking_pi1.php'])    {
+    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_appointmentbooking_pi1.php']);
 }
 
 ?>
