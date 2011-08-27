@@ -1,4 +1,5 @@
 <?php
+//ini_set('display_errors','On'); error_reporting(E_ALL);
 /***************************************************************
 *  Copyright notice
 *
@@ -33,50 +34,56 @@ require_once(PATH_tslib.'class.tslib_pibase.php');
 /**
  * Plugin 'Appointment Booking' for the 'appointment_booking' extension.
  *
- * @author	Johannes Binder <j.binder.x@gmail.com>
- * @package	TYPO3
- * @subpackage	tx_appointmentbooking
+ * @author    Johannes Binder <j.binder.x@gmail.com>
+ * @package    TYPO3
+ * @subpackage    tx_appointmentbooking
  */
 class tx_appointmentbooking_pi1 extends tslib_pibase {
-	var $prefixId      = 'tx_appointmentbooking_pi1';		// Same as class name
-	var $scriptRelPath = 'pi1/class.tx_appointmentbooking_pi1.php';	// Path to this script relative to the extension dir.
-	var $extKey        = 'appointment_booking';	// The extension key.
-	
-	/**
-	 * The main method of the PlugIn
-	 *
-	 * @param	string		$content: The PlugIn content
-	 * @param	array		$conf: The PlugIn configuration
-	 * @return	The content that is displayed on the website
-	 */
-	function main($content, $conf) {
-		$this->conf = $conf;
-		$this->pi_setPiVarDefaults();
-		$this->pi_loadLL();
-		$this->pi_USER_INT_obj = 1;	// Configuring so caching is not expected. This value means that no cHash params are ever set. We do this, because it's a USER_INT object!
-	
-		$content='
-			<strong>This is a few paragraphs:</strong><br />
-			<p>This is line 1</p>
-			<p>This is line 2</p>
-	
-			<h3>This is a form:</h3>
-			<form action="'.$this->pi_getPageLink($GLOBALS['TSFE']->id).'" method="POST">
-				<input type="text" name="'.$this->prefixId.'[input_field]" value="'.htmlspecialchars($this->piVars['input_field']).'">
-				<input type="submit" name="'.$this->prefixId.'[submit_button]" value="'.htmlspecialchars($this->pi_getLL('submit_button_label')).'">
-			</form>
-			<br />
-			<p>You can click here to '.$this->pi_linkToPage('get to this page again',$GLOBALS['TSFE']->id).'</p>
-		';
-	
-		return $this->pi_wrapInBaseClass($content);
-	}
+    var $prefixId      = 'tx_appointmentbooking_pi1';        // Same as class name
+    var $scriptRelPath = 'pi1/class.tx_appointmentbooking_pi1.php';    // Path to this script relative to the extension dir.
+    var $extKey        = 'appointment_booking';    // The extension key.
+
+    var $default_conf = array(
+            'templateFile' => 'EXT:appointment_booking/tpl/appointment_booking_month.html',
+        );
+    
+    /**
+     * The main method of the PlugIn
+     *
+     * @param    string        $content: The PlugIn content
+     * @param    array        $conf: The PlugIn configuration
+     * @return    The content that is displayed on the website
+     */
+    function main($content, $conf) {
+        $this->conf = $conf;
+        $this->pi_setPiVarDefaults();
+        $this->pi_loadLL();
+        $this->pi_USER_INT_obj = 1;    // Configuring so caching is not expected. This value means that no cHash params are ever set. We do this, because it's a USER_INT object!
+
+        $this->init();
+
+        $this->tpl->assign('url', $this->pi_getPageLink($GLOBALS['TSFE']->id));
+        return $this->pi_wrapInBaseClass($this->tpl->display($this->conf['templateFile']));
+    }
+
+    function init() {
+        foreach ($this->default_conf as $key => $val) {
+            if (empty($this->conf[$key])) $this->conf[$key] = $this->default_conf[$key];
+        }
+        if (strpos($this->conf['templateFile'], "EXT:") !== false) {
+            $this->conf['templateFile'] = PATH_site . $GLOBALS['TSFE']->tmpl->getFileName($this->conf['templateFile']);
+        }
+        if (!isset($this->conf['storagePid'])) $this->conf['storagePid'] = $GLOBALS["TSFE"]->id;
+
+        $this->tpl = tx_smarty::smarty();
+        $this->db = $GLOBALS['TYPO3_DB'];
+    }
 }
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php'])	{
-	include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php']);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php'])    {
+    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/appointment_booking/pi1/class.tx_appointmentbooking_pi1.php']);
 }
 
 ?>
