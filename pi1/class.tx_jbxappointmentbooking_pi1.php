@@ -71,6 +71,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             case "nextmonth":
                 $this->actionNextMonth();
                 break;
+            case "select":
+                $this->actionSelect(t3lib_div::_GET('value'));
+                break;
         }
 
         $content = $this->actionStep1();
@@ -92,6 +95,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $_SESSION['date_m'] = 1;
             ++$_SESSION['date_y'];
         }
+    }
+
+    private function actionSelect($day) {
+        $_SESSION['selected_d'] = $day;
+        $_SESSION['selected_m'] = $_SESSION['date_m'];
+        $_SESSION['selected_y'] = $_SESSION['date_y'];
     }
 
     private function actionStep1()
@@ -121,6 +130,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $status = 2;
             $cur_m = date("m");
             if (($date_m < $cur_m) || ($date_m == $cur_m && $i <= $date_d)) $status = 0;
+            if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
             $index = date('N', mktime(0, 0, 0, $date_m, $i, $date_y));
             $days[] = array('nr' => $i, 'status' => $status, 'index' => $index);
         }

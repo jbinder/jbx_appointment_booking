@@ -6,6 +6,9 @@
     .date_future {
        color: #006600;
     }
+    .date_selected {
+        background-color: #ABABAB;
+    }
     .calendar_table {
         text-align: center;
     }
@@ -28,9 +31,11 @@
         {if $days[day].status == 0}
             <p class="date_passed">{$days[day].nr}</p>
         {elseif $days[day].status == 2}
-            <p class="date_future">{$days[day].nr}</p>
+            <a href="{$url}?action=select&value={$days[day].nr}"><p class="date_future">{$days[day].nr}</p></a>
         {elseif $days[day].status == 3}
             {* filler, no output *}
+        {elseif $days[day].status == 4}
+            <p class="date_selected">{$days[day].nr}</p>
         {/if}
         </td>
     {/section}
