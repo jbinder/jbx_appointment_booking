@@ -1,0 +1,8 @@
+<!--<h1><a href="{$url}?action=prevday"><</a> {$day}/{$month}/{$year} <a href="{$url}?action=nextday">></a></h1>-->
+<h1>{$day}/{$month}/{$year}</h1>
+<table class="calendar_table">
+    {section name=timeSlot loop=$timeSlots}
+        <tr><td><p class="time_slot">{$timeSlots[timeSlot]}</p></td></tr>
+    {/section}
+</table>
+<a href="{$url}?action=prevstep">< prev</a> | <a href="{$url}?action=nextstep">next ></a>

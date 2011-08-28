@@ -45,7 +45,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $extKey        = 'jbx_appointment_booking';    // The extension key.
 
     var $defaultConf = array(
-            'templateFile' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
+            'templateFileStep1' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
+            'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
         );
 
@@ -74,11 +75,47 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             case "select":
                 $this->actionSelect(t3lib_div::_GET('value'));
                 break;
+            case "nextstep":
+                $this->actionNextStep();
+                break;
+            case "prevstep":
+                $this->actionPrevStep();
+                break;
+        }
+        
+        switch ($_SESSION['step']) {
+            case 1:
+                $content = $this->actionStep1();
+                break;
+            case 2:
+                $content = $this->actionStep2();
+                break;
         }
 
-        $content = $this->actionStep1();
-
         return $this->pi_wrapInBaseClass($content);
+    }
+
+    private function actionStep2()
+    {
+        $tpl_data = array(
+            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
+            'month' => $_SESSION['selected_m'],
+            'year' => $_SESSION['selected_y'],
+            'day' => $_SESSION['selected_d'],
+        );
+        $this->prepareTpl($tpl_data);
+        
+        return $this->tpl->display($this->conf['templateFileStep2']);
+    }
+
+    private function actionPrevStep() {
+        --$_SESSION['step'];
+        if ($_SESSION['step'] < 1) $_SESSION['step'] = 1;
+    }
+
+    private function actionNextStep() {
+        ++$_SESSION['step'];
+        if ($_SESSION['step'] > 2) $_SESSION['step'] = 2;
     }
 
     private function actionPrevMonth() {
@@ -117,9 +154,13 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'days' => $days,
             'weekdayNames' => explode(',', $this->conf['calendarWeekdayNames']),
         );
-        foreach ($tpl_data as $key => $value) $this->tpl->assign($key, $value);
+        $this->prepareTpl($tpl_data);
 
-        return $this->tpl->display($this->conf['templateFile']);
+        return $this->tpl->display($this->conf['templateFileStep1']);
+    }
+
+    private function prepareTpl($tpl_data) {
+        foreach ($tpl_data as $key => $value) $this->tpl->assign($key, $value);
     }
 
     private function getMonthDays($date_m, $date_y, $date_d)
@@ -147,13 +188,18 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return ($days);
     }
 
+    function cleanUpTemplateFilePath($templateFile) {
+        if (strpos($this->conf[$templateFile], "EXT:") !== false) {
+            $this->conf[$templateFile] = PATH_site . $GLOBALS['TSFE']->tmpl->getFileName($this->conf[$templateFile]);
+        }
+    }
+
     function init() {
         foreach ($this->defaultConf as $key => $val) {
             if (empty($this->conf[$key])) $this->conf[$key] = $this->defaultConf[$key];
         }
-        if (strpos($this->conf['templateFile'], "EXT:") !== false) {
-            $this->conf['templateFile'] = PATH_site . $GLOBALS['TSFE']->tmpl->getFileName($this->conf['templateFile']);
-        }
+        $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3');
+        foreach ($templateFiles as $templateFile) $this->cleanUpTemplateFilePath($templateFile);
         if (!isset($this->conf['storagePid'])) $this->conf['storagePid'] = $GLOBALS["TSFE"]->id;
 
         $this->tpl = tx_smarty::smarty();
@@ -162,6 +208,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if (!isset($_SESSION['date_d'])) $_SESSION['date_d'] = date("d");
         if (!isset($_SESSION['date_m'])) $_SESSION['date_m'] = date("m");
         if (!isset($_SESSION['date_y'])) $_SESSION['date_y'] = date("Y");
+        if (!isset($_SESSION['step'])) $_SESSION['step'] = 1;
     }
 }
 
