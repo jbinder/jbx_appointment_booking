@@ -7,6 +7,20 @@
 	<data type="array">
 		<languageKey index="default" type="array">
 			<label index="tt_content.list_type_pi1">Appointment Booking</label>
+			<label index="tx_jbxappointmentbooking_season">Appointment Booking - Season</label>
+			<label index="tx_jbxappointmentbooking_season.from_day">from (day)</label>
+			<label index="tx_jbxappointmentbooking_season.from_month">from (month)</label>
+			<label index="tx_jbxappointmentbooking_season.until_day">until (day)</label>
+			<label index="tx_jbxappointmentbooking_season.until_month">until (month)</label>
+			<label index="tx_jbxappointmentbooking_season.title">title</label>
+			<label index="tx_jbxappointmentbooking_slot_range">Appointment Booking - Slot Range</label>
+			<label index="tx_jbxappointmentbooking_slot_range.weekday">weekday (index)</label>
+			<label index="tx_jbxappointmentbooking_slot_range.from_hour">from (hour)</label>
+			<label index="tx_jbxappointmentbooking_slot_range.from_minute">from (minute)</label>
+			<label index="tx_jbxappointmentbooking_slot_range.to_hour">to (hour)</label>
+			<label index="tx_jbxappointmentbooking_slot_range.to_minute">to (minute)</label>
+			<label index="tx_jbxappointmentbooking_slot_range.title">title</label>
+			<label index="tx_jbxappointmentbooking_slot_range.season">season</label>
 		</languageKey>
 	</data>
 </T3locallang>

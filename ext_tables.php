@@ -12,4 +12,50 @@ t3lib_extMgm::addPlugin(array(
 	$_EXTKEY . '_pi1',
 	t3lib_extMgm::extRelPath($_EXTKEY) . 'ext_icon.gif'
 ),'list_type');
+
+
+t3lib_extMgm::allowTableOnStandardPages('tx_jbxappointmentbooking_season');
+
+$TCA['tx_jbxappointmentbooking_season'] = array (
+	'ctrl' => array (
+		'title'     => 'LLL:EXT:jbx_appointment_booking/locallang_db.xml:tx_jbxappointmentbooking_season',		
+		'label'     => 'title',	
+		'tstamp'    => 'tstamp',
+		'crdate'    => 'crdate',
+		'cruser_id' => 'cruser_id',
+		'languageField'            => 'sys_language_uid',	
+		'transOrigPointerField'    => 'l10n_parent',	
+		'transOrigDiffSourceField' => 'l10n_diffsource',	
+		'default_sortby' => 'ORDER BY crdate',	
+		'delete' => 'deleted',	
+		'enablecolumns' => array (		
+			'disabled' => 'hidden',
+		),
+		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tca.php',
+		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_jbxappointmentbooking_season.gif',
+	),
+);
+
+
+t3lib_extMgm::allowTableOnStandardPages('tx_jbxappointmentbooking_slot_range');
+
+$TCA['tx_jbxappointmentbooking_slot_range'] = array (
+	'ctrl' => array (
+		'title'     => 'LLL:EXT:jbx_appointment_booking/locallang_db.xml:tx_jbxappointmentbooking_slot_range',		
+		'label'     => 'title',	
+		'tstamp'    => 'tstamp',
+		'crdate'    => 'crdate',
+		'cruser_id' => 'cruser_id',
+		'languageField'            => 'sys_language_uid',	
+		'transOrigPointerField'    => 'l10n_parent',	
+		'transOrigDiffSourceField' => 'l10n_diffsource',	
+		'default_sortby' => 'ORDER BY crdate',	
+		'delete' => 'deleted',	
+		'enablecolumns' => array (		
+			'disabled' => 'hidden',
+		),
+		'dynamicConfigFile' => t3lib_extMgm::extPath($_EXTKEY).'tca.php',
+		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_jbxappointmentbooking_slot_range.gif',
+	),
+);
 ?>
