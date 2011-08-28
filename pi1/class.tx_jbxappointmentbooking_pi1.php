@@ -30,6 +30,7 @@ ini_set('display_errors','On'); // error_reporting(E_ALL);
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 
+session_start();
 
 /**
  * Plugin 'Appointment Booking' for the 'jbx_appointment_booking' extension.
@@ -63,26 +64,47 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->init();
 
+        switch (t3lib_div::_GET('action')) {
+            case "prevmonth":
+                $this->actionPrevMonth();
+                break;
+            case "nextmonth":
+                $this->actionNextMonth();
+                break;
+        }
+
         $content = $this->actionStep1();
 
         return $this->pi_wrapInBaseClass($content);
     }
 
+    private function actionPrevMonth() {
+        --$_SESSION['date_m'];
+        if ($_SESSION['date_m'] < 1) {
+            $_SESSION['date_m'] = 12;
+            --$_SESSION['date_y'];
+        }
+    }
+
+    private function actionNextMonth() {
+        ++$_SESSION['date_m'];
+        if ($_SESSION['date_m'] > 12) {
+            $_SESSION['date_m'] = 1;
+            ++$_SESSION['date_y'];
+        }
+    }
+
     private function actionStep1()
     {
-        $date_d = date("d");
-        $date_m = date("m");
-        $date_y = date("Y");
-
         $days = array_merge(
-            $this->getFillerDays($date_m, $date_y),
-            $this->getMonthDays($date_m, $date_y, $date_d)
+            $this->getFillerDays($_SESSION['date_m'], $_SESSION['date_y']),
+            $this->getMonthDays($_SESSION['date_m'], $_SESSION['date_y'], $_SESSION['date_d'])
         );
 
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'month' => $date_m,
-            'year' => $date_y,
+            'month' => $_SESSION['date_m'],
+            'year' => $_SESSION['date_y'],
             'days' => $days,
             'weekdayNames' => explode(',', $this->conf['calendarWeekdayNames']),
         );
@@ -97,7 +119,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $days_in_month = cal_days_in_month(CAL_GREGORIAN, $date_m, $date_y);
         for ($i = 1; $i <= $days_in_month; ++$i) {
             $status = 2;
-            if ($i <= $date_d) $status = 0;
+            $cur_m = date("m");
+            if (($date_m < $cur_m) || ($date_m == $cur_m && $i <= $date_d)) $status = 0;
             $index = date('N', mktime(0, 0, 0, $date_m, $i, $date_y));
             $days[] = array('nr' => $i, 'status' => $status, 'index' => $index);
         }
@@ -125,6 +148,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->tpl = tx_smarty::smarty();
         $this->db = $GLOBALS['TYPO3_DB'];
+
+        if (!isset($_SESSION['date_d'])) $_SESSION['date_d'] = date("d");
+        if (!isset($_SESSION['date_m'])) $_SESSION['date_m'] = date("m");
+        if (!isset($_SESSION['date_y'])) $_SESSION['date_y'] = date("Y");
     }
 }
 
