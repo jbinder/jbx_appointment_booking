@@ -1,5 +1,5 @@
 <?php
-//ini_set('display_errors','On'); error_reporting(E_ALL);
+ini_set('display_errors','On'); // error_reporting(E_ALL);
 /***************************************************************
 *  Copyright notice
 *
@@ -36,15 +36,16 @@ require_once(PATH_tslib.'class.tslib_pibase.php');
  *
  * @author    Johannes Binder <j.binder.x@gmail.com>
  * @package    TYPO3
- * @subpackage    tx_appointmentbooking
+ * @subpackage    tx_jbxappointmentbooking
  */
 class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
-    var $prefixId      = 'tx_appointmentbooking_pi1';        // Same as class name
-    var $scriptRelPath = 'pi1/class.tx_appointmentbooking_pi1.php';    // Path to this script relative to the extension dir.
+    var $prefixId      = 'tx_jbxappointmentbooking_pi1';        // Same as class name
+    var $scriptRelPath = 'pi1/class.tx_jbxappointmentbooking_pi1.php';    // Path to this script relative to the extension dir.
     var $extKey        = 'jbx_appointment_booking';    // The extension key.
 
-    var $default_conf = array(
+    var $defaultConf = array(
             'templateFile' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
+            'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
         );
 
     /**
@@ -62,13 +63,60 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->init();
 
-        $this->tpl->assign('url', $this->pi_getPageLink($GLOBALS['TSFE']->id));
-        return $this->pi_wrapInBaseClass($this->tpl->display($this->conf['templateFile']));
+        $content = $this->actionStep1();
+
+        return $this->pi_wrapInBaseClass($content);
+    }
+
+    private function actionStep1()
+    {
+        $date_d = date("d");
+        $date_m = date("m");
+        $date_y = date("Y");
+
+        $days = array_merge(
+            $this->getFillerDays($date_m, $date_y),
+            $this->getMonthDays($date_m, $date_y, $date_d)
+        );
+
+        $tpl_data = array(
+            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
+            'month' => $date_m,
+            'year' => $date_y,
+            'days' => $days,
+            'weekdayNames' => explode(',', $this->conf['calendarWeekdayNames']),
+        );
+        foreach ($tpl_data as $key => $value) $this->tpl->assign($key, $value);
+
+        return $this->tpl->display($this->conf['templateFile']);
+    }
+
+    private function getMonthDays($date_m, $date_y, $date_d)
+    {
+        $days = array();
+        $days_in_month = cal_days_in_month(CAL_GREGORIAN, $date_m, $date_y);
+        for ($i = 1; $i <= $days_in_month; ++$i) {
+            $status = 2;
+            if ($i <= $date_d) $status = 0;
+            $index = date('N', mktime(0, 0, 0, $date_m, $i, $date_y));
+            $days[] = array('nr' => $i, 'status' => $status, 'index' => $index);
+        }
+        return $days;
+    }
+
+    private function getFillerDays($date_m, $date_y)
+    {
+        $days = array();
+        $first_weekday_of_month = date('N', mktime(0, 0, 0, $date_m, 1, $date_y));
+        for ($i = 0; $i < $first_weekday_of_month; ++$i) {
+            $days[] = array('nr' => 0, 'status' => 3, 'index' => $first_weekday_of_month - $i);
+        }
+        return ($days);
     }
 
     function init() {
-        foreach ($this->default_conf as $key => $val) {
-            if (empty($this->conf[$key])) $this->conf[$key] = $this->default_conf[$key];
+        foreach ($this->defaultConf as $key => $val) {
+            if (empty($this->conf[$key])) $this->conf[$key] = $this->defaultConf[$key];
         }
         if (strpos($this->conf['templateFile'], "EXT:") !== false) {
             $this->conf['templateFile'] = PATH_site . $GLOBALS['TSFE']->tmpl->getFileName($this->conf['templateFile']);
@@ -82,8 +130,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
 
 
-if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_appointmentbooking_pi1.php'])    {
-    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_appointmentbooking_pi1.php']);
+if (defined('TYPO3_MODE') && $TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_jbxappointmentbooking_pi1.php'])    {
+    include_once($TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/jbx_appointment_booking/pi1/class.tx_jbxappointmentbooking_pi1.php']);
 }
 
 ?>

@@ -1,2 +1,39 @@
-<h1>Month</h1>
+{literal}
+<style type="text/css">
+    .date_passed {
+       color: #AAAAAA;
+    }
+    .date_future {
+       color: #006600;
+    }
+    .calendar_table {
+        text-align: center;
+    }
+</style>
+{/literal}
+
+<h1>{$month}/{$year}</h1>
+<table class="calendar_table">
+    <tr>
+        {section name=weekdayName loop=$weekdayNames}
+            <td><p class="weekday_name">&nbsp;{$weekdayNames[weekdayName]}&nbsp;</p></td>
+        {/section}
+    </tr>
+    <tr>
+    {section name=day loop=$days}
+        {if $days[day].index == 7}
+            </tr><tr>
+        {/if}
+        <td>
+        {if $days[day].status == 0}
+            <p class="date_passed">{$days[day].nr}</p>
+        {elseif $days[day].status == 2}
+            <p class="date_future">{$days[day].nr}</p>
+        {elseif $days[day].status == 3}
+            {* filler, no output *}
+        {/if}
+        </td>
+    {/section}
+    </tr>
+</table>
 <a href="{$url}">next</a>
