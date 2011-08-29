@@ -72,37 +72,18 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->init();
 
-        switch (t3lib_div::_GET('action')) {
-            case "prevmonth":
-                $this->actionPrevMonth();
-                break;
-            case "nextmonth":
-                $this->actionNextMonth();
-                break;
-            case "select":
-                $this->actionSelect(t3lib_div::_GET('value'));
-                break;
-            case "nextstep":
-                $this->actionNextStep();
-                break;
-            case "prevstep":
-                $this->actionPrevStep();
-                break;
-            case "selectSlot":
-                $this->actionSelectSlot(t3lib_div::_GET('value'));
-                break;
-        }
-        
-        switch ($_SESSION['step']) {
-            case 1:
-                $content = $this->actionStep1();
-                break;
-            case 2:
-                $content = $this->actionStep2();
-                break;
-        }
+        $this->handleAction(t3lib_div::_GET('action'));
+        $content = $this->performStep($_SESSION['step']);
 
         return $this->pi_wrapInBaseClass($content);
+    }
+
+    private function handleAction($action) {
+        call_user_func(array($this, "action" . $action), t3lib_div::_GET('value'));
+    }
+
+    private function performStep($step) {
+        return call_user_func(array($this, "actionStep" . $step));
     }
 
     private function actionSelectSlot($time) {
