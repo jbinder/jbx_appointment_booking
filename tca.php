@@ -59,8 +59,8 @@ $TCA['tx_jbxappointmentbooking_season'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '31',
+					'lower' => '1'
 				),
 				'default' => 0
 			)
@@ -75,8 +75,8 @@ $TCA['tx_jbxappointmentbooking_season'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '12',
+					'lower' => '1'
 				),
 				'default' => 0
 			)
@@ -91,8 +91,8 @@ $TCA['tx_jbxappointmentbooking_season'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '31',
+					'lower' => '1'
 				),
 				'default' => 0
 			)
@@ -107,8 +107,8 @@ $TCA['tx_jbxappointmentbooking_season'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '12',
+					'lower' => '1'
 				),
 				'default' => 0
 			)
@@ -188,8 +188,8 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '7',
+					'lower' => '1'
 				),
 				'default' => 0
 			)
@@ -204,8 +204,8 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '23',
+					'lower' => '0'
 				),
 				'default' => 0
 			)
@@ -220,8 +220,8 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '59',
+					'lower' => '0'
 				),
 				'default' => 0
 			)
@@ -236,8 +236,8 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '23',
+					'lower' => '0'
 				),
 				'default' => 0
 			)
@@ -252,8 +252,8 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 				'eval'     => 'int',
 				'checkbox' => '0',
 				'range'    => array (
-					'upper' => '1000',
-					'lower' => '10'
+					'upper' => '59',
+					'lower' => '0'
 				),
 				'default' => 0
 			)

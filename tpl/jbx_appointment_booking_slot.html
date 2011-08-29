@@ -1,8 +1,32 @@
+{literal}
+<style type="text/css">
+    .slot_taken {
+       color: #AAAAAA;
+    }
+    .slot_available {
+       color: #006600;
+    }
+    .slot_selected {
+        background-color: #ABABAB;
+    }
+    .slot_table {
+        text-align: center;
+    }
+</style>
+{/literal}
+
 <!--<h1><a href="{$url}?action=prevday"><</a> {$day}/{$month}/{$year} <a href="{$url}?action=nextday">></a></h1>-->
 <h1>{$day}/{$month}/{$year}</h1>
-<table class="calendar_table">
+<table class="slot_table">
     {section name=timeSlot loop=$timeSlots}
-        <tr><td><p class="time_slot">{$timeSlots[timeSlot]}</p></td></tr>
+        <tr><td><a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">
+            {if $timeSlots[timeSlot].status == 2} <p class="slot_available">
+            {elseif $timeSlots[timeSlot].status == 4} <p class="slot_selected">
+            {/if}
+                {$timeSlots[timeSlot].from_hour}:{$timeSlots[timeSlot].from_minute|string_format:"%02d"} -
+                {$timeSlots[timeSlot].to_hour}:{$timeSlots[timeSlot].to_minute|string_format:"%02d"}
+            </p>
+        </a></td></tr>
     {/section}
 </table>
 <a href="{$url}?action=prevstep">< prev</a> | <a href="{$url}?action=nextstep">next ></a>

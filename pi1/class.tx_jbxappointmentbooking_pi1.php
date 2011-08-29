@@ -48,7 +48,14 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateFileStep1' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
             'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
+            'slotLength' => 60,
         );
+
+    var $seasonTableName = "tx_jbxappointmentbooking_season";
+    var $slotTableName = "tx_jbxappointmentbooking_slot_range";
+
+    var $tpl = null;
+    var $db = null;
 
     /**
      * The main method of the PlugIn
@@ -81,6 +88,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             case "prevstep":
                 $this->actionPrevStep();
                 break;
+            case "selectSlot":
+                $this->actionSelectSlot(t3lib_div::_GET('value'));
+                break;
         }
         
         switch ($_SESSION['step']) {
@@ -95,13 +105,90 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return $this->pi_wrapInBaseClass($content);
     }
 
+    private function actionSelectSlot($time) {
+        list($_SESSION['selected_hour'], $_SESSION['selected_minute']) = explode("-", $time);
+    }
+
+    private function getSlots() {
+        $month = $_SESSION['selected_m'];
+        $day = $_SESSION['selected_d'];
+        $year = $_SESSION['selected_y'];
+        $weekday = date('N', mktime(0, 0, 0, $month, $day, $year));
+        $season_id = $this->getSeason($month, $day);
+        $slot_ranges = $this->getSlotRanges($season_id, $weekday);
+        return $this->calcSlotEntries($slot_ranges);
+    }
+
+    private function calcSlotEntries($slot_ranges) {
+        $slots = array();
+        $cur = 0;
+        $next = 0;
+        foreach ($slot_ranges as $slot_entry) {
+            $start = $this->toMinutes($slot_entry['from_hour'], $slot_entry['from_minute']);
+            $end = $this->toMinutes($slot_entry['to_hour'], $slot_entry['to_minute']);
+            while ($next <= $end) {
+                if ($cur < $start) $cur = $start;
+                $next = $cur + $this->conf['slotLength'];
+                if ($next <= $end) {
+                    $item = array(
+                        'from_hour' => floor($cur / 60),
+                        'from_minute' => $cur % 60,
+                        'to_hour' => floor($next / 60),
+                        'to_minute' => $next % 60,
+                        'status' => 2,
+                    );
+                    if ($item['from_hour'] == $_SESSION['selected_hour'] && $item['from_minute'] == $_SESSION['selected_minute']) {
+                        $item['status'] = 4;
+                    }
+                    $slots[] = $item;
+                }
+                $cur = $next;
+            }
+        }
+        return $slots;
+    }
+
+    private function getSlotRanges($season_id, $weekday) {
+        $slot_ranges = array();
+        $res = $this->db->exec_SELECTquery("*", $this->slotTableName,
+            "hidden = 0 and deleted = 0 and " .
+            "season = $season_id and weekday = $weekday",
+            "",
+            "from_hour, from_minute"
+        );
+        while ($row = $this->db->sql_fetch_assoc($res)){
+            $slot_ranges[] = $row;
+        }
+        $this->db->sql_free_result($res);
+        return $slot_ranges;
+    }
+
+    private function toMinutes($hours, $minutes) {
+        return $hours * 60 + $minutes;
+    }
+
+    private function getSeason($month, $day)
+    {
+        $res = $this->db->exec_SELECTquery("*", $this->seasonTableName,
+            "hidden = 0 and deleted = 0 and " .
+            "(from_month < $month and until_month > $month) or " .
+            "((from_month = $month or until_month = $month) and from_day <= $day and until_day >= $day)"
+        );
+        $row = $this->db->sql_fetch_assoc($res);
+        $this->db->sql_free_result($res);
+        return $row['uid'];
+    }
+
     private function actionStep2()
     {
+        $slots = $this->getSlots();
+        
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
             'month' => $_SESSION['selected_m'],
             'year' => $_SESSION['selected_y'],
             'day' => $_SESSION['selected_d'],
+            'timeSlots' => $slots,
         );
         $this->prepareTpl($tpl_data);
         
@@ -138,6 +225,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $_SESSION['selected_d'] = $day;
         $_SESSION['selected_m'] = $_SESSION['date_m'];
         $_SESSION['selected_y'] = $_SESSION['date_y'];
+        unset($_SESSION['selected_hour']);
+        unset($_SESSION['selected_minute']);
     }
 
     private function actionStep1()
