@@ -47,10 +47,14 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $defaultConf = array(
             'templateFileStep1' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
             'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
+            'templateFileStep3' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
+            'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
             'slotLength' => 60,
         );
 
+    var $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4');
+    var $numSteps = 4;
     var $seasonTableName = "tx_jbxappointmentbooking_season";
     var $slotTableName = "tx_jbxappointmentbooking_slot_range";
 
@@ -84,6 +88,48 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function performStep($step) {
         return call_user_func(array($this, "actionStep" . $step));
+    }
+
+    private function actionStep4() {
+        $tpl_data = array(
+            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
+            'month' => $_SESSION['selected_m'],
+            'year' => $_SESSION['selected_y'],
+            'day' => $_SESSION['selected_d'],
+            'minute' => $_SESSION['selected_minute'],
+            'hour' => $_SESSION['selected_hour'],
+        );
+        $this->prepareTpl($tpl_data);
+
+        $this->resetSession();
+
+        return $this->tpl->display($this->conf['templateFileStep4']);
+    }
+
+    private function resetSession()
+    {
+        unset($_SESSION['selected_d']);
+        unset($_SESSION['selected_m']);
+        unset($_SESSION['selected_y']);
+        unset($_SESSION['selected_minute']);
+        unset($_SESSION['selected_hour']);
+        $_SESSION['step'] = 1;
+    }
+
+    private function actionStep3() {
+        if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) return $this->actionStep4();
+        
+        $tpl_data = array(
+            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
+            'month' => $_SESSION['selected_m'],
+            'year' => $_SESSION['selected_y'],
+            'day' => $_SESSION['selected_d'],
+            'minute' => $_SESSION['selected_minute'],
+            'hour' => $_SESSION['selected_hour'],
+        );
+        $this->prepareTpl($tpl_data);
+
+        return $this->tpl->display($this->conf['templateFileStep3']);
     }
 
     private function actionSelectSlot($time) {
@@ -183,7 +229,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function actionNextStep() {
         ++$_SESSION['step'];
-        if ($_SESSION['step'] > 2) $_SESSION['step'] = 2;
+        if ($_SESSION['step'] > $this->numSteps) $_SESSION['step'] = $this->numSteps;
     }
 
     private function actionPrevMonth() {
@@ -268,8 +314,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         foreach ($this->defaultConf as $key => $val) {
             if (empty($this->conf[$key])) $this->conf[$key] = $this->defaultConf[$key];
         }
-        $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3');
-        foreach ($templateFiles as $templateFile) $this->cleanUpTemplateFilePath($templateFile);
+        foreach ($this->templateFiles as $templateFile) $this->cleanUpTemplateFilePath($templateFile);
         if (!isset($this->conf['storagePid'])) $this->conf['storagePid'] = $GLOBALS["TSFE"]->id;
 
         $this->tpl = tx_smarty::smarty();
