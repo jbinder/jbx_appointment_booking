@@ -6,4 +6,8 @@
 
 <h1>{$day}/{$month}/{$year} {$hour}:{$minute|string_format:"%02d"}</h1>
 
-All done, thanks!
+{if $status == 0}
+    All done, thanks!
+{elseif $status == 1}
+    Adding the event to the calendar failed for unknown reason. Please try again.
+{/if}

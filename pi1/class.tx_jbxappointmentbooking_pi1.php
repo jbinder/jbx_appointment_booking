@@ -30,6 +30,7 @@ ini_set('display_errors','On'); // error_reporting(E_ALL);
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/../lib/zend_gdata/library/");
 session_start();
 
 /**
@@ -50,7 +51,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateFileStep3' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
             'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
-            'slotLength' => 60,
+            'slotLength' => 75,
+            'gcal_username' => '',
+            'gcal_password' => '',
+            'event_title' => '[appointment] ',
         );
 
     var $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4');
@@ -90,7 +94,43 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return call_user_func(array($this, "actionStep" . $step));
     }
 
+    private function addEvent() {
+        require_once 'Zend/Loader.php';
+        Zend_Loader::loadClass('Zend_Gdata');
+        Zend_Loader::loadClass('Zend_Gdata_ClientLogin');
+        Zend_Loader::loadClass('Zend_Gdata_Calendar');
+        Zend_Loader::loadClass('Zend_Http_Client');
+
+        $client = Zend_Gdata_ClientLogin::getHttpClient(
+            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $gcal = new Zend_Gdata_Calendar($client);
+
+        $title = htmlentities($this->conf['event_title'] . $GLOBALS["TSFE"]->fe_user->user['username']);
+        $start = date(DATE_ATOM, mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'],
+            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']));
+        $end = date(DATE_ATOM, mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'] + $this->conf['slotLength'],
+            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']));
+        $description = $GLOBALS["TSFE"]->fe_user->user['username'] . ": " . $GLOBALS["TSFE"]->fe_user->user['email'];
+
+        try {
+            $event = $gcal->newEventEntry();
+            $event->title = $gcal->newTitle($title);
+            $when = $gcal->newWhen();
+            $when->startTime = $start;
+            $when->endTime = $end;
+            $event->when = array($when);
+            $content = $gcal->newContent($description);
+            $event->content = $content;
+            $gcal->insertEvent($event);
+        } catch (Zend_Gdata_App_Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
     private function actionStep4() {
+        $status = $this->addEvent() ? "0" : "1";
+
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
             'month' => $_SESSION['selected_m'],
@@ -98,6 +138,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'day' => $_SESSION['selected_d'],
             'minute' => $_SESSION['selected_minute'],
             'hour' => $_SESSION['selected_hour'],
+            'status' => $status,
         );
         $this->prepareTpl($tpl_data);
 
