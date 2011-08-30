@@ -33,6 +33,13 @@ require_once(PATH_tslib.'class.tslib_pibase.php');
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/../lib/zend_gdata/library/");
 session_start();
 
+require_once 'Zend/Loader.php';
+Zend_Loader::loadClass('Zend_Gdata');
+Zend_Loader::loadClass('Zend_Gdata_ClientLogin');
+Zend_Loader::loadClass('Zend_Gdata_Calendar');
+Zend_Loader::loadClass('Zend_Http_Client');
+
+
 /**
  * Plugin 'Appointment Booking' for the 'jbx_appointment_booking' extension.
  *
@@ -94,22 +101,43 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return call_user_func(array($this, "actionStep" . $step));
     }
 
-    private function addEvent() {
-        require_once 'Zend/Loader.php';
-        Zend_Loader::loadClass('Zend_Gdata');
-        Zend_Loader::loadClass('Zend_Gdata_ClientLogin');
-        Zend_Loader::loadClass('Zend_Gdata_Calendar');
-        Zend_Loader::loadClass('Zend_Http_Client');
+    private function containsEvent($start, $end) {
+        $client = Zend_Gdata_ClientLogin::getHttpClient(
+            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $gcal = new Zend_Gdata_Calendar($client);
 
+        try {
+            $query = $gcal->newEventQuery();
+            $query->setFutureevents('true');
+            $query->setVisibility('private');
+            $query->setProjection('full');
+            $query->setStartMin(date("c", $start));
+            $query->setStartMax(date("c", $end));
+            $eventFeed = $gcal->getCalendarEventFeed($query);
+        } catch (Zend_Gdata_App_Exception $e) {
+            return false;
+        }
+
+        foreach ($eventFeed as $event) {
+            foreach ($event->when as $when) {
+                $cur_start_time = strtotime($when->startTime);
+                $cur_end_time = strtotime($when->endTime);
+                if ($cur_start_time > $start && $cur_start_time < $end) return true;
+                if ($cur_start_time <= $start && $cur_end_time >= $start) return true;
+                if ($cur_end_time > $start && $cur_end_time < $end) return true;
+            }
+        }
+        return false;
+    }
+
+    private function addEvent($start, $end) {
         $client = Zend_Gdata_ClientLogin::getHttpClient(
             $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
         $gcal = new Zend_Gdata_Calendar($client);
 
         $title = htmlentities($this->conf['event_title'] . $GLOBALS["TSFE"]->fe_user->user['username']);
-        $start = date(DATE_ATOM, mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'],
-            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']));
-        $end = date(DATE_ATOM, mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'] + $this->conf['slotLength'],
-            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']));
+        $start = date(DATE_ATOM, $start);
+        $end = date(DATE_ATOM, $end);
         $description = $GLOBALS["TSFE"]->fe_user->user['username'] . ": " . $GLOBALS["TSFE"]->fe_user->user['email'];
 
         try {
@@ -129,7 +157,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function actionStep4() {
-        $status = $this->addEvent() ? "0" : "1";
+        $start = mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'],
+            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+        $end = mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'] + $this->conf['slotLength'],
+            0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+        if ($this->containsEvent($start, $end)) $status = 2;
+        else $status = $this->addEvent($start, $end) ? 0 : 1;
 
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
@@ -208,6 +241,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
                     if ($item['from_hour'] == $_SESSION['selected_hour'] && $item['from_minute'] == $_SESSION['selected_minute']) {
                         $item['status'] = 4;
                     }
+                    $start_time = mktime($item['from_hour'], $item['from_minute'],
+                        0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+                    $end_time = mktime($item['to_hour'], $item['to_minute'],
+                        0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+                    if ($this->containsEvent($start_time, $end_time)) $item['status'] = 1;
                     $slots[] = $item;
                 }
                 $cur = $next;

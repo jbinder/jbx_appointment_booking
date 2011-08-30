@@ -19,14 +19,15 @@
 <h1>{$day}/{$month}/{$year}</h1>
 <table class="slot_table">
     {section name=timeSlot loop=$timeSlots}
-        <tr><td><a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">
-            {if $timeSlots[timeSlot].status == 2} <p class="slot_available">
+        <tr><td>{if $timeSlots[timeSlot].status != 1}<a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">{/if}
+            {if $timeSlots[timeSlot].status == 1} <p class="slot_taken">
+            {elseif $timeSlots[timeSlot].status == 2} <p class="slot_available">
             {elseif $timeSlots[timeSlot].status == 4} <p class="slot_selected">
             {/if}
                 {$timeSlots[timeSlot].from_hour}:{$timeSlots[timeSlot].from_minute|string_format:"%02d"} -
                 {$timeSlots[timeSlot].to_hour}:{$timeSlots[timeSlot].to_minute|string_format:"%02d"}
             </p>
-        </a></td></tr>
+        {if $timeSlots[timeSlot].status != 1}</a>{/if}</td></tr>
     {/section}
 </table>
 
