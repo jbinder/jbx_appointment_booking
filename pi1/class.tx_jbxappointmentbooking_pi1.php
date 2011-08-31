@@ -157,7 +157,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $title = htmlentities($this->conf['eventTitle'] . $GLOBALS["TSFE"]->fe_user->user['username']);
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
-        $description = $GLOBALS["TSFE"]->fe_user->user['username'] . ": " . $GLOBALS["TSFE"]->fe_user->user['email'];
+        $description = $_SESSION['user']['username'] . " (" . $_SESSION['user']['uid'] . ")" . ": " . $_SESSION['user']['email'];
 
         try {
             $event = $gcal->newEventEntry();
