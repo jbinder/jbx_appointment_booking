@@ -113,7 +113,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
                 $cur_start_time = strtotime($when->startTime);
                 $cur_end_time = strtotime($when->endTime);
                 if ($cur_start_time > $start && $cur_start_time < $end) return true;
-                if ($cur_start_time <= $start && $cur_end_time >= $start) return true;
+                if ($cur_start_time <= $start && $cur_end_time > $start) return true;
                 if ($cur_end_time > $start && $cur_end_time < $end) return true;
             }
         }
@@ -205,6 +205,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         unset($_SESSION['selected_minute']);
         unset($_SESSION['selected_hour']);
         $_SESSION['step'] = 1;
+        $this->clearEventCache();
     }
 
     private function actionStep3() {
@@ -231,10 +232,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $weekday = date('N', mktime(0, 0, 0, $month, $day, $year));
         $season_id = $this->getSeason($month, $day);
         $slot_ranges = $this->getSlotRanges($season_id, $weekday);
-        return $this->calcSlotEntries($slot_ranges);
+        return $this->calcSlotEntries($slot_ranges, $month, $day, $year);
     }
 
-    private function calcSlotEntries($slot_ranges) {
+    private function calcSlotEntries($slot_ranges, $month, $day, $year) {
         $slots = array();
         $cur = 0;
         $next = 0;
@@ -255,10 +256,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
                     if ($item['from_hour'] == $_SESSION['selected_hour'] && $item['from_minute'] == $_SESSION['selected_minute']) {
                         $item['status'] = 4;
                     }
-                    $start_time = mktime($item['from_hour'], $item['from_minute'],
-                        0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
-                    $end_time = mktime($item['to_hour'], $item['to_minute'],
-                        0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+                    $start_time = mktime($item['from_hour'], $item['from_minute'], 0, $month, $day, $year);
+                    $end_time = mktime($item['to_hour'], $item['to_minute'], 0, $month, $day, $year);
                     if ($this->containsEvent($start_time, $end_time)) $item['status'] = 1;
                     $slots[] = $item;
                 }
@@ -385,12 +384,23 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $status = 2;
             $cur_m = date("m");
             if (($date_m < $cur_m) || ($date_m == $cur_m && $i <= $date_d)) $status = 0;
-            if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
-            if (count($this->getSlots($date_m, $i, $date_y)) < 1) $status = 0;
+            else if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
+            else {
+                $slots = $this->getSlots($date_m, $i, $date_y);
+                if (count($slots) < 1) $status = 0;
+                else if (!$this->checkForFreeSlots($slots)) $status = 0;
+            }
             $index = date('N', mktime(0, 0, 0, $date_m, $i, $date_y));
             $days[] = array('nr' => $i, 'status' => $status, 'index' => $index);
         }
         return $days;
+    }
+
+    private function checkForFreeSlots($slots) {
+        foreach ($slots as $slot) {
+            if ($slot['status'] != 1) return true;
+        }
+        return false;
     }
 
     private function getFillerDays($date_m, $date_y)
