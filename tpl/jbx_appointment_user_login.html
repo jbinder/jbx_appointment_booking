@@ -1,12 +1,40 @@
 {literal}
 <style type="text/css">
-
+    .error {
+        color: #FF0000;
+    }
 </style>
 {/literal}
 
 <h1>{$day}/{$month}/{$year} {$hour}:{$minute|string_format:"%02d"}</h1>
 
-Please login and come back to this page. Your settings will not be lost.<br/>
+<h2>Login...</h2>
+{if $error == 1}<p class="error">Invalid username or password.</p>{/if}
+<form action="{$url}?action=login" method="post">
+Username:<br/>
+<input type="text" name="username" /><br/>
+Password:<br/>
+<input type="password" name="password" /><br/><br/>
+<input type="submit" value="login" />
+</form>
+        
+<h3>Or Register!</h3>
+{if $error == 2}<p class="error">Please fill out all fields!</p>{/if}
+{if $error == 3}<p class="error">An unknown error occurred. Please try again later.</p>{/if}
+<form action="{$url}?action=register" method="post">
+Username:<br/>
+<input type="text" name="username" /><br/>
+Password:<br/>
+<input type="password" name="password" /><br/>
+E-Mail:<br/>
+<input type="text" name="email" /><br/>
+First name:<br/>
+<input type="text" name="first_name" /><br/>
+Last name:<br/>
+<input type="text" name="last_name" /><br/>
+<br/>
+<input type="submit" value="register" />
+</form>
 
 <br/>
 <a href="{$url}?action=prevstep">< prev</a> | <a href="{$url}?action=nextstep">next ></a>

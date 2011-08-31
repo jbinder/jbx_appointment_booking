@@ -61,7 +61,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'slotLength' => 75,
             'gcal_username' => '',
             'gcal_password' => '',
-            'event_title' => '[appointment] ',
+            'eventTitle' => '[appointment] ',
+            'userPID' => 0,
+            'userGroup' => 1,
         );
 
     var $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4');
@@ -73,6 +75,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $db = null;
 
     var $eventCache = null;
+    var $error = 0;
 
     /**
      * The main method of the PlugIn
@@ -151,7 +154,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
         $gcal = new Zend_Gdata_Calendar($client);
 
-        $title = htmlentities($this->conf['event_title'] . $GLOBALS["TSFE"]->fe_user->user['username']);
+        $title = htmlentities($this->conf['eventTitle'] . $GLOBALS["TSFE"]->fe_user->user['username']);
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
         $description = $GLOBALS["TSFE"]->fe_user->user['username'] . ": " . $GLOBALS["TSFE"]->fe_user->user['email'];
@@ -204,12 +207,56 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         unset($_SESSION['selected_y']);
         unset($_SESSION['selected_minute']);
         unset($_SESSION['selected_hour']);
+        unset($_SESSION['user']);
         $_SESSION['step'] = 1;
         $this->clearEventCache();
     }
 
+    private function actionLogin() {
+        $username = mysql_real_escape_string(t3lib_div::_POST('username'));
+        $password = mysql_real_escape_string(t3lib_div::_POST('password'));
+
+        $res = $this->db->exec_SELECTquery(
+            '*',
+            'fe_users',
+            "username = '$username' and password = '$password'");
+        $user = $this->db->sql_fetch_assoc($res);
+        if ($user == null) {
+            $this->error = 1;
+        } else {
+            $_SESSION['user'] = $user;
+        }
+        $this->db->sql_free_result();
+    }
+
+    private function actionRegister() {
+        $fields = array('username', 'password', 'email', 'first_name', 'last_name');
+        $data = array();
+        foreach ($fields as $field) {
+            $value = t3lib_div::_POST($field);
+            if (empty($value)) {
+                $this->error = 2;
+                return;
+            }
+            $data[$field] = mysql_real_escape_string($value);
+        }
+        $data['pid'] = $this->conf['userPID'];
+        $data['usergroup'] = $this->conf['userGroup'];
+        $data['name'] = $data['first_name'] . " " . $data['last_name'];
+        $data['tstamp'] = time();
+        $res = $this->db->exec_INSERTquery('fe_users', $data);
+        if (!$res) {
+            $this->error = 3;
+            return;
+        }
+        $this->actionLogin();
+    }
+
     private function actionStep3() {
-        if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) return $this->actionStep4();
+        if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
+            $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
+        }
+        if ($_SESSION['user']['uid'] > 0) return $this->actionStep4();
         
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
@@ -218,6 +265,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'day' => $_SESSION['selected_d'],
             'minute' => $_SESSION['selected_minute'],
             'hour' => $_SESSION['selected_hour'],
+            'error' => $this->error,
         );
         $this->prepareTpl($tpl_data);
 
