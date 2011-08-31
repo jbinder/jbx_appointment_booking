@@ -72,6 +72,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $tpl = null;
     var $db = null;
 
+    var $eventCache = null;
+
     /**
      * The main method of the PlugIn
      *
@@ -102,23 +104,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function containsEvent($start, $end) {
-        $client = Zend_Gdata_ClientLogin::getHttpClient(
-            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
-        $gcal = new Zend_Gdata_Calendar($client);
-
-        try {
-            $query = $gcal->newEventQuery();
-            $query->setFutureevents('true');
-            $query->setVisibility('private');
-            $query->setProjection('full');
-            $query->setStartMin(date("c", $start));
-            $query->setStartMax(date("c", $end));
-            $eventFeed = $gcal->getCalendarEventFeed($query);
-        } catch (Zend_Gdata_App_Exception $e) {
-            return false;
+        if (is_null($this->eventCache)) {
+            $this->rebuildEventCache();
         }
 
-        foreach ($eventFeed as $event) {
+        foreach ($this->eventCache as $event) {
             foreach ($event->when as $when) {
                 $cur_start_time = strtotime($when->startTime);
                 $cur_end_time = strtotime($when->endTime);
@@ -128,6 +118,32 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             }
         }
         return false;
+    }
+
+    private function rebuildEventCache() {
+        $client = Zend_Gdata_ClientLogin::getHttpClient(
+            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $gcal = new Zend_Gdata_Calendar($client);
+        $month = ($_SESSION['step'] == 1) ? $_SESSION['date_m'] : $_SESSION['selected_m'];
+        $year = ($_SESSION['step'] == 1) ? $_SESSION['date_y'] : $_SESSION['selected_y'];
+        $start_time = mktime(0, 0, 0, $month, 1, $year);
+        $end_time = mktime(0, 0, 0, $month + 1, 1, $year);
+        try {
+            $query = $gcal->newEventQuery();
+            $query->setFutureevents('true');
+            $query->setVisibility('private');
+            $query->setProjection('full');
+            $query->setStartMin(date("c", $start_time));
+            $query->setStartMax(date("c", $end_time));
+            $eventFeed = $gcal->getCalendarEventFeed($query);
+        } catch (Zend_Gdata_App_Exception $e) {
+            return false;
+        }
+        $this->eventCache = $eventFeed;
+    }
+
+    private function clearEventCache() {
+        $this->eventCache = null;
     }
 
     private function addEvent($start, $end) {
@@ -161,6 +177,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
         $end = mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'] + $this->conf['slotLength'],
             0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+        $this->clearEventCache();
         if ($this->containsEvent($start, $end)) $status = 2;
         else $status = $this->addEvent($start, $end) ? 0 : 1;
 
@@ -210,10 +227,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         list($_SESSION['selected_hour'], $_SESSION['selected_minute']) = explode("-", $time);
     }
 
-    private function getSlots() {
-        $month = $_SESSION['selected_m'];
-        $day = $_SESSION['selected_d'];
-        $year = $_SESSION['selected_y'];
+    private function getSlots($month, $day, $year) {
         $weekday = date('N', mktime(0, 0, 0, $month, $day, $year));
         $season_id = $this->getSeason($month, $day);
         $slot_ranges = $this->getSlotRanges($season_id, $weekday);
@@ -287,7 +301,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function actionStep2()
     {
-        $slots = $this->getSlots();
+        if ($_SESSION['date_m'] != $_SESSION['selected_m'] || $_SESSION['date_y'] != $_SESSION['selected_y']) {
+            $this->clearEventCache();
+        }
+        $slots = $this->getSlots($_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
         
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
@@ -317,6 +334,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $_SESSION['date_m'] = 12;
             --$_SESSION['date_y'];
         }
+        $this->clearEventCache();
     }
 
     private function actionNextMonth() {
@@ -325,6 +343,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $_SESSION['date_m'] = 1;
             ++$_SESSION['date_y'];
         }
+        $this->clearEventCache();
     }
 
     private function actionSelect($day) {
@@ -367,6 +386,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $cur_m = date("m");
             if (($date_m < $cur_m) || ($date_m == $cur_m && $i <= $date_d)) $status = 0;
             if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
+            if (count($this->getSlots($date_m, $i, $date_y)) < 1) $status = 0;
             $index = date('N', mktime(0, 0, 0, $date_m, $i, $date_y));
             $days[] = array('nr' => $i, 'status' => $status, 'index' => $index);
         }
