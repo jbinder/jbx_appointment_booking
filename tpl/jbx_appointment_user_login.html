@@ -10,6 +10,7 @@
 
 <h2>Login...</h2>
 {if $error == 1}<p class="error">Invalid username or password.</p>{/if}
+{if $error == 9}<p class="error">Please log in or register.</p>{/if}
 <form action="{$url}?action=login" method="post">
 Username:<br/>
 <input type="text" name="username" /><br/>

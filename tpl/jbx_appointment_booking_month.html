@@ -12,10 +12,14 @@
     .calendar_table {
         text-align: center;
     }
+    .error {
+        color: #FF0000;
+    }
 </style>
 {/literal}
 
 <h1>Select the date</h1>
+{if $error == 9}<p class="error">Select a day.</p>{/if}
 <h2><a href="{$url}?action=prevmonth"><</a> {$month}/{$year} <a href="{$url}?action=nextmonth">></a></h2>
 <table class="calendar_table">
     <tr>

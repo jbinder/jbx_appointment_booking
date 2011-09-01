@@ -93,6 +93,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         'selected_d', 'selected_m', 'selected_y', 'selected_minute', 'selected_hour',
         'user', 'step', 'selected_type', 'appointment_id'
         );
+    var $requiredVars = array(
+            1 => array('selected_type'),
+            2 => array('selected_d', 'selected_m', 'selected_y'),
+            3 => array('selected_minute', 'selected_hour'),
+            4 => array('user'),
+        );
 
     var $tpl = null;
     var $db = null;
@@ -139,6 +145,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
             'types' => $this->types,
             'selectedType' => $_SESSION['selected_type'],
+            'error' => $this->error,
         );
         $this->prepareTpl($tpl_data);
         return $this->tpl->display($this->conf['templateFileStep1']);
@@ -488,6 +495,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'year' => $_SESSION['selected_y'],
             'day' => $_SESSION['selected_d'],
             'timeSlots' => $slots,
+            'error' => $this->error,
         );
         $this->prepareTpl($tpl_data);
         
@@ -500,6 +508,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function actionNextStep() {
+        foreach ($this->requiredVars[$_SESSION['step']] as $requiredVar) {
+            if (!isset($_SESSION[$requiredVar])) {
+                $this->error = 9;
+                return;
+            }
+        }
         ++$_SESSION['step'];
         if ($_SESSION['step'] > $this->numSteps) $_SESSION['step'] = $this->numSteps;
     }
@@ -543,6 +557,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'year' => $_SESSION['date_y'],
             'days' => $days,
             'weekdayNames' => explode(',', $this->conf['calendarWeekdayNames']),
+            'error' => $this->error,
         );
         $this->prepareTpl($tpl_data);
 
