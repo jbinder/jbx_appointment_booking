@@ -5,6 +5,6 @@ your appointment for {$type} has been reserved on
 {$day}/{$month}/{$year} at {$hour}:{$minute|string_format:"%02d"}.
 
 If you can't make it please unsubscribe by copying following link into your browser's address bar:
-{$serverAddress}{$url}?action=cancel&id={$appointmentId}
+{$siteRootUrl}{$url}?action=cancel&id={$appointmentId}
 
 Thanks!

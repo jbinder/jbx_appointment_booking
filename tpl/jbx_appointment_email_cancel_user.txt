@@ -1,0 +1,5 @@
+Hello {$user.name},
+
+your appointment for {$type} on {$day}/{$month}/{$year} at {$hour}:{$minute|string_format:"%02d"} has been cancelled.
+
+Thanks!

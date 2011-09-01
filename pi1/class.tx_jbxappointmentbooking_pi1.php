@@ -62,6 +62,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateFileStepCancel' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_cancel.html',
             'templateEmailSubscribeUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_user.txt',
             'templateEmailSubscribeAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt',
+            'templateEmailCancelUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_user.txt',
+            'templateEmailCancelAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_admin.txt',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
             'slotLength' => 75,
             'gcal_username' => '',
@@ -71,14 +73,16 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'userGroup' => 1,
             'mailFromEmail' => "test@test.test",
             'mailFromName' => "test",
-            'mailSubjectUser' => "Your appointment",
-            'mailSubjectAdmin' => "New appointment",
+            'mailSubjectSubscribeUser' => "Your appointment",
+            'mailSubjectSubscribeAdmin' => "New appointment",
+            'mailSubjectCancelUser' => "Your appointment",
+            'mailSubjectCancelAdmin' => "Appointment cancelled",
             'adminEmail' => "test@test.test",
         );
 
     var $templateFiles = array(
         'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStepCancel',
-        'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin'
+        'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin', 'templateEmailCancelUser', 'templateEmailCancelAdmin'
         );
     var $numSteps = 4;
     var $seasonTableName = "tx_jbxappointmentbooking_season";
@@ -111,7 +115,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->handleAction(t3lib_div::_GET('action'));
         $content = $this->performStep($_SESSION['step']);
-
+        
         return $this->pi_wrapInBaseClass($content);
     }
 
@@ -126,8 +130,23 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function actionStepCancel() {
         $tpl_data = array(
             'status' => $this->error,
+            'month' => $_SESSION['selected_m'],
+            'year' => $_SESSION['selected_y'],
+            'day' => $_SESSION['selected_d'],
+            'minute' => $_SESSION['selected_minute'],
+            'hour' => $_SESSION['selected_hour'],
+            'type' => $_SESSION['selected_type'],
+            'user' => $_SESSION['user'],
         );
         $this->prepareTpl($tpl_data);
+        
+        if ($this->error == 0) {
+            $this->sendEmail($_SESSION['user']['email'],
+                $this->conf['mailSubjectCancelUser'], $this->conf['templateEmailCancelUser']);
+            $this->sendEmail($this->conf['adminEmail'],
+                $this->conf['mailSubjectCancelAdmin'], $this->conf['templateEmailCancelAdmin']);
+        }
+
         $this->resetSession();
 
         return $this->tpl->display($this->conf['templateFileStepCancel']);
@@ -135,7 +154,16 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function actionCancel() {
         $_SESSION['step'] = 'cancel';
-        if (!$this->removeEvent(base64_decode(t3lib_div::_GET('id')))) $this->error = 1;
+        $event_content = explode("\n", $this->removeEvent(base64_decode(t3lib_div::_GET('id'))));
+        if (count($event_content) < 2) {
+            $this->error = 1;
+        } else {
+            $data = explode("|", unserialize(base64_decode($event_content[2])));
+        }
+        $data_keys = array('tmp', 'tmp', 'tmp', 'selected_type', 'selected_hour', 'selected_minute', 'selected_m', 'selected_d', 'selected_y');
+        foreach ($data_keys as $key => $value) $_SESSION[$value] = $data[$key];
+        unset($_SESSION['tmp']);
+        $_SESSION['user'] = array('username' => $data[0], 'email' => $data[1], 'name'  => $data[2]);
     }
 
     private function containsEvent($start, $end) {
@@ -187,11 +215,13 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $gcal = new Zend_Gdata_Calendar($client);
 
         try {
+            $event = $gcal->getCalendarEventEntry($id);
+            $content = $event->getContent()->getText();
             $gcal->delete($id);
         } catch (Zend_Gdata_App_Exception $e) {
-            return false;
+            return null;
         }
-        return true;
+        return $content;
     }
 
     private function addEvent($start, $end) {
@@ -202,7 +232,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $title = htmlentities($this->conf['eventTitle'] . $GLOBALS["TSFE"]->fe_user->user['username']);
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
-        $description = $_SESSION['user']['username'] . " (" . $_SESSION['user']['uid'] . ")" . ": " . $_SESSION['user']['email'];
+        $description = "{$_SESSION['user']['username']} ({$_SESSION['user']['name']}, " .
+            "{$_SESSION['user']['uid']}), {$_SESSION['user']['email']}\n{$_SESSION['task']}";
+        $data = array($_SESSION['user']['username'], $_SESSION['user']['email'], $_SESSION['user']['name'],
+            $_SESSION['selected_type'], $_SESSION['selected_hour'], $_SESSION['selected_minute'],
+            $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+        $description .= "\n" . base64_encode(serialize(implode("|", $data)));
 
         try {
             $event = $gcal->newEventEntry();
@@ -240,14 +275,16 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'status' => $status,
             'type' => $_SESSION['selected_type'],
             'appointmentId' => $_SESSION['appointment_id'],
-            'serverAddress' => $this->getServerAddress(),
+            'siteRootUrl' => $this->getSiteRootUrl(),
             'user' => $_SESSION['user'],
         );
         $this->prepareTpl($tpl_data);
 
         if ($status == 0) {
-            $this->sendEmail($_SESSION['user']['email'], $this->conf['mailSubjectUser'], $this->conf['templateEmailSubscribeUser']);
-            $this->sendEmail($this->conf['adminEmail'], $this->conf['mailSubjectAdmin'], $this->conf['templateEmailSubscribeAdmin']);
+            $this->sendEmail($_SESSION['user']['email'],
+                $this->conf['mailSubjectSubscribeUser'], $this->conf['templateEmailSubscribeUser']);
+            $this->sendEmail($this->conf['adminEmail'],
+                $this->conf['mailSubjectSubscribeAdmin'], $this->conf['templateEmailSubscribeAdmin']);
         }
 
         $this->resetSession();
@@ -255,14 +292,14 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return $this->tpl->display($this->conf['templateFileStep4']);
     }
 
-    private function getServerAddress() {
+    private function getSiteRootUrl() {
         $serverAddress = (($_SERVER["HTTPS"] == "on") ? 'http' : 'https') . '://';
         if ($_SERVER["SERVER_PORT"] != "80") {
             $serverAddress .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"];
         } else {
             $serverAddress .= $_SERVER["SERVER_NAME"];
         }
-        $serverAddress .= "/";
+        $serverAddress .= str_replace("index.php", "", $_SERVER['PHP_SELF']);
         return $serverAddress;
     }
 
