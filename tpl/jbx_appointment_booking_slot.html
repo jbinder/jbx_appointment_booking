@@ -15,8 +15,7 @@
 </style>
 {/literal}
 
-<!--<h1><a href="{$url}?action=prevday"><</a> {$day}/{$month}/{$year} <a href="{$url}?action=nextday">></a></h1>-->
-<h1>{$day}/{$month}/{$year}</h1>
+<h1>Select the time</h1>
 <table class="slot_table">
     {section name=timeSlot loop=$timeSlots}
         <tr><td>{if $timeSlots[timeSlot].status != 1}<a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">{/if}

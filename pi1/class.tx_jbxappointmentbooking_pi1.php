@@ -55,10 +55,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $extKey        = 'jbx_appointment_booking';    // The extension key.
 
     var $defaultConf = array(
-            'templateFileStep1' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
-            'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
-            'templateFileStep3' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
-            'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
+            'templateFileStep1' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_type.html',
+            'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html',
+            'templateFileStep3' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
+            'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
+            'templateFileStep5' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
             'templateFileStepCancel' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_cancel.html',
             'templateEmailSubscribeUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_user.txt',
             'templateEmailSubscribeAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt',
@@ -78,13 +79,14 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mailSubjectCancelUser' => "Your appointment",
             'mailSubjectCancelAdmin' => "Appointment cancelled",
             'adminEmail' => "test@test.test",
+            'types' => 'type1, type2, type3',
         );
 
     var $templateFiles = array(
-        'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStepCancel',
+        'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStep5', 'templateFileStepCancel',
         'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin', 'templateEmailCancelUser', 'templateEmailCancelAdmin'
         );
-    var $numSteps = 4;
+    var $numSteps = 5;
     var $seasonTableName = "tx_jbxappointmentbooking_season";
     var $slotTableName = "tx_jbxappointmentbooking_slot_range";
     var $sessionVars = array(
@@ -97,6 +99,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     var $eventCache = null;
     var $error = 0;
+    var $types = array();
 
     /**
      * The main method of the PlugIn
@@ -125,6 +128,20 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function performStep($step) {
         return call_user_func(array($this, "actionStep" . $step));
+    }
+
+    private function actionSelectType($type) {
+        $_SESSION['selected_type'] = $type;
+    }
+
+    private function actionStep1() {
+        $tpl_data = array(
+            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
+            'types' => $this->types,
+            'selectedType' => $_SESSION['selected_type'],
+        );
+        $this->prepareTpl($tpl_data);
+        return $this->tpl->display($this->conf['templateFileStep1']);
     }
 
     private function actionStepCancel() {
@@ -233,7 +250,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
         $description = "{$_SESSION['user']['username']} ({$_SESSION['user']['name']}, " .
-            "{$_SESSION['user']['uid']}), {$_SESSION['user']['email']}\n{$_SESSION['task']}";
+            "{$_SESSION['user']['uid']}), {$_SESSION['user']['email']}\n{$_SESSION['selected_type']}";
         $data = array($_SESSION['user']['username'], $_SESSION['user']['email'], $_SESSION['user']['name'],
             $_SESSION['selected_type'], $_SESSION['selected_hour'], $_SESSION['selected_minute'],
             $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
@@ -256,7 +273,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return true;
     }
 
-    private function actionStep4() {
+    private function actionStep5() {
         $start = mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'],
             0, $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
         $end = mktime($_SESSION['selected_hour'], $_SESSION['selected_minute'] + $this->conf['slotLength'],
@@ -289,7 +306,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->resetSession();
 
-        return $this->tpl->display($this->conf['templateFileStep4']);
+        return $this->tpl->display($this->conf['templateFileStep5']);
     }
 
     private function getSiteRootUrl() {
@@ -364,11 +381,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->actionLogin();
     }
 
-    private function actionStep3() {
+    private function actionStep4() {
         if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
             $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
         }
-        if ($_SESSION['user']['uid'] > 0) return $this->actionStep4();
+        if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
         $tpl_data = array(
             'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
@@ -381,7 +398,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         );
         $this->prepareTpl($tpl_data);
 
-        return $this->tpl->display($this->conf['templateFileStep3']);
+        return $this->tpl->display($this->conf['templateFileStep4']);
     }
 
     private function actionSelectSlot($time) {
@@ -458,7 +475,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return $row['uid'];
     }
 
-    private function actionStep2()
+    private function actionStep3()
     {
         if ($_SESSION['date_m'] != $_SESSION['selected_m'] || $_SESSION['date_y'] != $_SESSION['selected_y']) {
             $this->clearEventCache();
@@ -474,7 +491,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         );
         $this->prepareTpl($tpl_data);
         
-        return $this->tpl->display($this->conf['templateFileStep2']);
+        return $this->tpl->display($this->conf['templateFileStep3']);
     }
 
     private function actionPrevStep() {
@@ -513,7 +530,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         unset($_SESSION['selected_minute']);
     }
 
-    private function actionStep1()
+    private function actionStep2()
     {
         $days = array_merge(
             $this->getFillerDays($_SESSION['date_m'], $_SESSION['date_y']),
@@ -529,7 +546,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         );
         $this->prepareTpl($tpl_data);
 
-        return $this->tpl->display($this->conf['templateFileStep1']);
+        return $this->tpl->display($this->conf['templateFileStep2']);
     }
 
     private function prepareTpl($tpl_data) {
@@ -593,6 +610,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if (!isset($_SESSION['date_m'])) $_SESSION['date_m'] = date("m");
         if (!isset($_SESSION['date_y'])) $_SESSION['date_y'] = date("Y");
         if (!isset($_SESSION['step'])) $_SESSION['step'] = 1;
+
+        $this->types = explode(",", $this->conf['types']);
+        for ($i = 0; $i < count($this->types); ++$i) {
+            $this->types[$i] = trim($this->types[$i]);
+        }
     }
 }
 

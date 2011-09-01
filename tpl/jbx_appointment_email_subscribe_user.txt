@@ -1,8 +1,10 @@
 Hello {$user.name},
 
-your appointment for {$type} has been reserved on
+your appointment has been reserved:
 
-{$day}/{$month}/{$year} at {$hour}:{$minute|string_format:"%02d"}.
+type: {$type}
+date: {$day}/{$month}/{$year}
+time: {$hour}:{$minute|string_format:"%02d"}.
 
 If you can't make it please unsubscribe by copying following link into your browser's address bar:
 {$siteRootUrl}{$url}?action=cancel&id={$appointmentId}

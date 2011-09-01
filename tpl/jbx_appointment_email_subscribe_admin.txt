@@ -1,10 +1,11 @@
 Hello admin,
 
-a new appointment has been registered:
+a new appointment has been reserved:
 
+type: {$type}
+date: {$day}/{$month}/{$year}
+time: {$hour}:{$minute|string_format:"%02d"}.
 user: {$user.username} (name = {$user.name}, uid = {$user.uid}, e-mail = {$user.email})
-time: {$day}/{$month}/{$year} {$hour}:{$minute|string_format:"%02d"}
-task: {$task}
 id: {$appointmentId}
 
 It was added to your Google Calendar.

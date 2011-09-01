@@ -4,6 +4,6 @@ an appointment has been cancelled:
 
 user: {$user.username} (name = {$user.name}, e-mail = {$user.email})
 time: {$day}/{$month}/{$year} {$hour}:{$minute|string_format:"%02d"}
-task: {$task}
+type: {$type}
 
 It was removed from your Google Calendar.

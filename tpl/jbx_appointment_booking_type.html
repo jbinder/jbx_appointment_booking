@@ -1,0 +1,28 @@
+{literal}
+<style type="text/css">
+    .type_available {
+       color: #006600;
+    }
+    .type_selected {
+        background-color: #ABABAB;
+    }
+    .type_table {
+        text-align: center;
+    }
+</style>
+{/literal}
+<h1>Select the appointment type</h1>
+<table class="type_table">
+    {section name=type loop=$types}
+        <tr><td><a href="{$url}?action=selectType&value={$types[type]}">
+            {if $types[type] == $selectedType} <p class="type_selected">
+            {else}<p class="type_available">
+            {/if}
+                {$types[type]}
+            </p>
+        </a></td></tr>
+    {/section}
+</table>
+
+<br/>
+<a href="{$url}?action=nextstep">next ></a>
