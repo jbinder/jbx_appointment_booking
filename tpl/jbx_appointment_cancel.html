@@ -1,0 +1,13 @@
+{literal}
+<style type="text/css">
+
+</style>
+{/literal}
+
+<h1>Cancelling appointment</h1>
+
+{if $status == 0}
+    Your appointment has been canceled.
+{elseif $status == 1}
+    An error has occurred while deleting your appointment.
+{/if}

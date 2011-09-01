@@ -30,6 +30,8 @@ ini_set('display_errors','On'); // error_reporting(E_ALL);
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 
+require_once(dirname(__FILE__) . '/../lib/phpmailer_lite/class.phpmailer-lite.php');
+
 set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/../lib/zend_gdata/library/");
 session_start();
 
@@ -57,6 +59,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateFileStep2' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_slot.html',
             'templateFileStep3' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
             'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
+            'templateFileStepCancel' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_cancel.html',
+            'templateEmailSubscribeUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_user.txt',
+            'templateEmailSubscribeAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
             'slotLength' => 75,
             'gcal_username' => '',
@@ -64,12 +69,24 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'eventTitle' => '[appointment] ',
             'userPID' => 0,
             'userGroup' => 1,
+            'mailFromEmail' => "test@test.test",
+            'mailFromName' => "test",
+            'mailSubjectUser' => "Your appointment",
+            'mailSubjectAdmin' => "New appointment",
+            'adminEmail' => "test@test.test",
         );
 
-    var $templateFiles = array('templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4');
+    var $templateFiles = array(
+        'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStepCancel',
+        'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin'
+        );
     var $numSteps = 4;
     var $seasonTableName = "tx_jbxappointmentbooking_season";
     var $slotTableName = "tx_jbxappointmentbooking_slot_range";
+    var $sessionVars = array(
+        'selected_d', 'selected_m', 'selected_y', 'selected_minute', 'selected_hour',
+        'user', 'step', 'selected_type', 'appointment_id'
+        );
 
     var $tpl = null;
     var $db = null;
@@ -104,6 +121,21 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function performStep($step) {
         return call_user_func(array($this, "actionStep" . $step));
+    }
+
+    private function actionStepCancel() {
+        $tpl_data = array(
+            'status' => $this->error,
+        );
+        $this->prepareTpl($tpl_data);
+        $this->resetSession();
+
+        return $this->tpl->display($this->conf['templateFileStepCancel']);
+    }
+
+    private function actionCancel() {
+        $_SESSION['step'] = 'cancel';
+        if (!$this->removeEvent(base64_decode(t3lib_div::_GET('id')))) $this->error = 1;
     }
 
     private function containsEvent($start, $end) {
@@ -149,6 +181,19 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->eventCache = null;
     }
 
+    private function removeEvent($id) {
+        $client = Zend_Gdata_ClientLogin::getHttpClient(
+            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $gcal = new Zend_Gdata_Calendar($client);
+
+        try {
+            $gcal->delete($id);
+        } catch (Zend_Gdata_App_Exception $e) {
+            return false;
+        }
+        return true;
+    }
+
     private function addEvent($start, $end) {
         $client = Zend_Gdata_ClientLogin::getHttpClient(
             $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
@@ -168,10 +213,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $event->when = array($when);
             $content = $gcal->newContent($description);
             $event->content = $content;
-            $gcal->insertEvent($event);
+            $new_event = $gcal->insertEvent($event);
         } catch (Zend_Gdata_App_Exception $e) {
             return false;
         }
+        $_SESSION['appointment_id'] = base64_encode($new_event->getLink('edit')->href);
         return true;
     }
 
@@ -192,24 +238,53 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'minute' => $_SESSION['selected_minute'],
             'hour' => $_SESSION['selected_hour'],
             'status' => $status,
+            'type' => $_SESSION['selected_type'],
+            'appointmentId' => $_SESSION['appointment_id'],
+            'serverAddress' => $this->getServerAddress(),
+            'user' => $_SESSION['user'],
         );
         $this->prepareTpl($tpl_data);
+
+        if ($status == 0) {
+            $this->sendEmail($_SESSION['user']['email'], $this->conf['mailSubjectUser'], $this->conf['templateEmailSubscribeUser']);
+            $this->sendEmail($this->conf['adminEmail'], $this->conf['mailSubjectAdmin'], $this->conf['templateEmailSubscribeAdmin']);
+        }
 
         $this->resetSession();
 
         return $this->tpl->display($this->conf['templateFileStep4']);
     }
 
+    private function getServerAddress() {
+        $serverAddress = (($_SERVER["HTTPS"] == "on") ? 'http' : 'https') . '://';
+        if ($_SERVER["SERVER_PORT"] != "80") {
+            $serverAddress .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"];
+        } else {
+            $serverAddress .= $_SERVER["SERVER_NAME"];
+        }
+        $serverAddress .= "/";
+        return $serverAddress;
+    }
+
     private function resetSession()
     {
-        unset($_SESSION['selected_d']);
-        unset($_SESSION['selected_m']);
-        unset($_SESSION['selected_y']);
-        unset($_SESSION['selected_minute']);
-        unset($_SESSION['selected_hour']);
-        unset($_SESSION['user']);
+        foreach ($this->sessionVars as $var) {
+            unset($_SESSION[$var]);
+        }
         $_SESSION['step'] = 1;
         $this->clearEventCache();
+    }
+
+    function sendEmail($email, $subject, $template) {
+        $mail = new PHPMailerLite();
+        $mail->SetFrom($this->conf['mailFromEmail'], $this->conf['mailFromName']);
+        $mail->AddAddress($email);
+        $mail->WordWrap = 50;
+        $mail->IsHTML(false);
+        $mail->Subject = $subject;
+        $mail->Body    = $this->tpl->display($template);
+        if (!$mail->Send()) return false;
+        return true;
     }
 
     private function actionLogin() {
