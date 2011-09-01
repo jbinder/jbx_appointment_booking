@@ -20,9 +20,18 @@ The admin is notified about new and cancelled appointments per e-mail.
 * smarty extension for TYPO3
 * Google Calendar account
 
-== Configuration ==
+== Install and Configuration ==
 
-* TypoScript
+* Install the Appointment Booking plugin.
+
+* Define your time slots.
+
+In the list view add at least one Appointment Booking - Season record and as much Appointment Booking - Slot Range
+records as you need.
+
+* Configure the extension.
+
+Add the TypoScript configuration to the extension template where you installed the plugin.
 
 Required parameters are:
 gcal_username // Google Calendar username

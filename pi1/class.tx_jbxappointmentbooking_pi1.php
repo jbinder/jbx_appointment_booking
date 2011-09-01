@@ -253,7 +253,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
         $gcal = new Zend_Gdata_Calendar($client);
 
-        $title = htmlentities($this->conf['eventTitle'] . $GLOBALS["TSFE"]->fe_user->user['username']);
+        $title = htmlentities($this->conf['eventTitle'] . $_SESSION['user']['username']);
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
         $description = "{$_SESSION['user']['username']} ({$_SESSION['user']['name']}, " .
@@ -317,7 +317,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function getSiteRootUrl() {
-        $serverAddress = (($_SERVER["HTTPS"] == "on") ? 'http' : 'https') . '://';
+        $serverAddress = (($_SERVER["HTTPS"] == "on") ? 'https' : 'http') . '://';
         if ($_SERVER["SERVER_PORT"] != "80") {
             $serverAddress .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"];
         } else {
