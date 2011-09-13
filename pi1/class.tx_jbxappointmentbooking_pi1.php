@@ -80,7 +80,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mailSubjectCancelAdmin' => "Appointment cancelled",
             'adminEmail' => "test@test.test",
             'types' => 'type1, type2, type3',
-            'autoContinueAfterSteps' => '1,2,3,4,5',
+            'autoContinueAfterActions' => 'selectType, select, selectSlot',
         );
 
     var $templateFiles = array(
@@ -107,6 +107,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $eventCache = null;
     var $error = 0;
     var $types = array();
+    var $autoContinueAfterActions = array();
 
     /**
      * The main method of the PlugIn
@@ -131,7 +132,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function handleAction($action) {
         call_user_func(array($this, "action" . $action), t3lib_div::_GET('value'));
-        if (in_array($_SESSION['step'], $this->conf['autoContinueAfterSteps'])) $this->actionNextStep(); 
+        if (in_array($action, $this->autoContinueAfterActions)) $this->actionNextStep(); 
     }
 
     private function performStep($step) {
@@ -628,10 +629,16 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if (!isset($_SESSION['date_y'])) $_SESSION['date_y'] = date("Y");
         if (!isset($_SESSION['step'])) $_SESSION['step'] = 1;
 
-        $this->types = explode(",", $this->conf['types']);
-        for ($i = 0; $i < count($this->types); ++$i) {
-            $this->types[$i] = trim($this->types[$i]);
+        $this->types = $this->explodeTrimmed($this->conf['types']);
+        $this->autoContinueAfterActions = $this->explodeTrimmed($this->conf['autoContinueAfterActions']);
+    }
+    
+    private function explodeTrimmed($dataStr) {
+        $data = explode(",", $dataStr);
+        for ($i = 0; $i < count($data); ++$i) {
+            $data[$i] = trim($data[$i]);
         }
+        return $data;
     }
 }
 
