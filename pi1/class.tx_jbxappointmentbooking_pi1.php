@@ -61,6 +61,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateFileStep4' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html',
             'templateFileStep5' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html',
             'templateFileStepCancel' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_cancel.html',
+            'templateFileStepMonthSlot' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month_slot.html',
             'templateEmailSubscribeUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_user.txt',
             'templateEmailSubscribeAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt',
             'templateEmailCancelUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_user.txt',
@@ -80,14 +81,17 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mailSubjectCancelAdmin' => "Appointment cancelled",
             'adminEmail' => "test@test.test",
             'types' => 'type1, type2, type3',
-            'autoContinueAfterActions' => 'selectType, select, selectSlot',
+            'autoContinueAfterActions' => '', /*'selectType, select, selectSlot', */
+            'mergeDateAndTimeSteps' => false,
         );
 
     var $templateFiles = array(
         'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStep5', 'templateFileStepCancel',
-        'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin', 'templateEmailCancelUser', 'templateEmailCancelAdmin'
+        'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin', 'templateEmailCancelUser', 'templateEmailCancelAdmin',
+        'templateFileStepMonthSlot'
         );
     var $numSteps = 5;
+    var $stepSlot = 3;
     var $seasonTableName = "tx_jbxappointmentbooking_season";
     var $slotTableName = "tx_jbxappointmentbooking_slot_range";
     var $sessionVars = array(
@@ -491,6 +495,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function actionPrevStep() {
         --$_SESSION['step'];
+        if ($this->conf['mergeDateAndTimeSteps'] && $_SESSION['step'] == $this->stepSlot) --$_SESSION['step'];
         if ($_SESSION['step'] < 1) $_SESSION['step'] = 1;
     }
 
@@ -502,6 +507,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             }
         }
         ++$_SESSION['step'];
+        if ($this->conf['mergeDateAndTimeSteps'] && $_SESSION['step'] == $this->stepSlot) ++$_SESSION['step'];
         if ($_SESSION['step'] > $this->numSteps) $_SESSION['step'] = $this->numSteps;
     }
 
@@ -543,10 +549,20 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $tpl_data['weekdayNames'] = explode(',', $this->conf['calendarWeekdayNames']);
         $tpl_data['curMonth'] = $_SESSION['date_m'];
         $tpl_data['curYear'] = $_SESSION['date_y'];
+        
+        if ($this->conf['mergeDateAndTimeSteps']) {
+            if ($_SESSION['date_m'] != $_SESSION['selected_m'] || $_SESSION['date_y'] != $_SESSION['selected_y']) {
+                $this->clearEventCache();
+            }
+            $tpl_data['timeSlots'] = $this->getSlots(
+                $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
+        }
 
         $this->prepareTpl($tpl_data);
 
-        return $this->tpl->display($this->conf['templateFileStep2']);
+        return ($this->conf['mergeDateAndTimeSteps']) ? 
+            $this->tpl->display($this->conf['templateFileStepMonthSlot']) : 
+            $this->tpl->display($this->conf['templateFileStep2']);
     }
 
     private function prepareTpl($tpl_data) {

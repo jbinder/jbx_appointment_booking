@@ -1,0 +1,86 @@
+{literal}
+<style type="text/css">
+    .date_passed {
+       color: #AAAAAA;
+    }
+    .date_future {
+       color: #006600;
+    }
+    .date_selected {
+        background-color: #ABABAB;
+    }
+    .calendar_table {
+        text-align: center;
+    }
+    .slot_taken {
+       color: #AAAAAA;
+    }
+    .slot_available {
+       color: #006600;
+    }
+    .slot_selected {
+        background-color: #ABABAB;
+    }
+    .slot_table {
+        text-align: center;
+    }
+    .error {
+        color: #FF0000;
+    }
+</style>
+{/literal}
+
+<h1>Select the date</h1>
+{if $status == 9}<p class="error">Select a day.</p>{/if}
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
+<h2><a href="{$url}?action=prevmonth"><</a> {$curMonth}/{$curYear} <a href="{$url}?action=nextmonth">></a></h2>
+<table class="calendar_table">
+    <tr>
+        {section name=weekdayName loop=$weekdayNames}
+            <td><p class="weekday_name">&nbsp;{$weekdayNames[weekdayName]}&nbsp;</p></td>
+        {/section}
+    </tr>
+    <tr>
+    {section name=day loop=$days}
+        {if $days[day].index == 7}
+            </tr><tr>
+        {/if}
+        <td>
+        {if $days[day].status == 0}
+            <p class="date_passed">{$days[day].nr}</p>
+        {elseif $days[day].status == 2}
+            <a href="{$url}?action=select&value={$days[day].nr}"><p class="date_future">{$days[day].nr}</p></a>
+        {elseif $days[day].status == 3}
+            {* filler, no output *}
+        {elseif $days[day].status == 4}
+            <p class="date_selected">{$days[day].nr}</p>
+        {/if}
+        </td>
+    {/section}
+    </tr>
+</table>
+
+<h1>Select the time</h1>
+{if $day && $month}
+    {if $status == 9}<p class="error">Select a time.</p>{/if}
+    {if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
+    <table class="slot_table">
+        {section name=timeSlot loop=$timeSlots}
+            <tr><td>{if $timeSlots[timeSlot].status != 1}<a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">{/if}
+                {if $timeSlots[timeSlot].status == 1} <p class="slot_taken">
+                {elseif $timeSlots[timeSlot].status == 2} <p class="slot_available">
+                {elseif $timeSlots[timeSlot].status == 4} <p class="slot_selected">
+                {/if}
+                    {$timeSlots[timeSlot].from_hour}:{$timeSlots[timeSlot].from_minute|string_format:"%02d"} -
+                    {$timeSlots[timeSlot].to_hour}:{$timeSlots[timeSlot].to_minute|string_format:"%02d"}
+                </p>
+            {if $timeSlots[timeSlot].status != 1}</a>{/if}</td></tr>
+        {/section}
+    </table>
+{else}
+   Select a day first.<br/>
+{/if}
+
+
+<br/>
+<a href="{$url}?action=prevstep">< prev</a> | <a href="{$url}?action=nextstep">next ></a>

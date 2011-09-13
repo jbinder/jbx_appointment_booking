@@ -72,6 +72,8 @@ plugin.tx_jbxappointmentbooking_pi1 {
     mailSubjectCancelAdmin = Appointment cancelled
     adminEmail = test@test.test
     types = type1, type2, type3
+    autoContinueAfterActions = selectType, select, selectSlot
+    mergeDateAndTimeSteps = false
 }
 
 == Styling ==
