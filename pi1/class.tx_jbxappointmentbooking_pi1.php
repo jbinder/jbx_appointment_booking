@@ -616,6 +616,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         
         if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
             $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
+        } else {
+            unset($_SESSION['user']);
         }
     }
     
