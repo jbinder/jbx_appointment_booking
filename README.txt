@@ -74,6 +74,17 @@ plugin.tx_jbxappointmentbooking_pi1 {
     types = type1, type2, type3
 }
 
+== Styling ==
+
+Following variables are available in the templates:
+
+day, month, year, minute, hour, step, type, appointmentId, user.uid, user.email, user.username
+
+Example usage: {$day}
+Mind that not all of these variables are available from beginning, but from a specific steps on.
+
+See http://www.smarty.net/docsv2/en/ for further information.
+
 == Acknowledgement ==
 
 This software contains:

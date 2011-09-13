@@ -394,9 +394,6 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function actionStep4() {
-        if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
-            $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
-        }
         if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
         $this->prepareTpl($this->getBasicTplData());
@@ -616,6 +613,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->types = $this->explodeTrimmed($this->conf['types']);
         $this->autoContinueAfterActions = $this->explodeTrimmed($this->conf['autoContinueAfterActions']);
+        
+        if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
+            $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
+        }
     }
     
     private function explodeTrimmed($dataStr) {
