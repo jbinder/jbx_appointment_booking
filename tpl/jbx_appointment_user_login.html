@@ -7,10 +7,11 @@
 {/literal}
 
 <h1>Authenticate</h1>
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
 
 <h2>Login...</h2>
-{if $error == 1}<p class="error">Invalid username or password.</p>{/if}
-{if $error == 9}<p class="error">Please log in or register.</p>{/if}
+{if $status == 1}<p class="error">Invalid username or password.</p>{/if}
+{if $status == 9}<p class="error">Please log in or register.</p>{/if}
 <form action="{$url}?action=login" method="post">
 Username:<br/>
 <input type="text" name="username" /><br/>
@@ -20,8 +21,8 @@ Password:<br/>
 </form>
         
 <h3>Or Register!</h3>
-{if $error == 2}<p class="error">Please fill out all fields!</p>{/if}
-{if $error == 3}<p class="error">An unknown error occurred. Please try again later.</p>{/if}
+{if $status == 2}<p class="error">Please fill out all fields!</p>{/if}
+{if $status == 3}<p class="error">An unknown error occurred. Please try again later.</p>{/if}
 <form action="{$url}?action=register" method="post">
 Username:<br/>
 <input type="text" name="username" /><br/>

@@ -15,14 +15,15 @@
 </style>
 {/literal}
 <h1>Select the appointment type</h1>
-{if $error == 9}<p class="error">Select an appointment type.</p>{/if}
+{if $status == 9}<p class="error">Select an appointment type.</p>{/if}
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
 <table class="type_table">
-    {section name=type loop=$types}
-        <tr><td><a href="{$url}?action=selectType&value={$types[type]}">
-            {if $types[type] == $selectedType} <p class="type_selected">
+    {section name=curtype loop=$types}
+        <tr><td><a href="{$url}?action=selectType&value={$types[curtype]}">
+            {if $types[curtype] == $type} <p class="type_selected">
             {else}<p class="type_available">
             {/if}
-                {$types[type]}
+                {$types[curtype]}
             </p>
         </a></td></tr>
     {/section}

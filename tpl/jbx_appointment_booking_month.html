@@ -19,8 +19,9 @@
 {/literal}
 
 <h1>Select the date</h1>
-{if $error == 9}<p class="error">Select a day.</p>{/if}
-<h2><a href="{$url}?action=prevmonth"><</a> {$month}/{$year} <a href="{$url}?action=nextmonth">></a></h2>
+{if $status == 9}<p class="error">Select a day.</p>{/if}
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
+<h2><a href="{$url}?action=prevmonth"><</a> {$curMonth}/{$curYear} <a href="{$url}?action=nextmonth">></a></h2>
 <table class="calendar_table">
     <tr>
         {section name=weekdayName loop=$weekdayNames}

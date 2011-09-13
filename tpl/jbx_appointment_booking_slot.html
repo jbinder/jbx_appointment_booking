@@ -19,7 +19,8 @@
 {/literal}
 
 <h1>Select the time</h1>
-{if $error == 9}<p class="error">Select a time.</p>{/if}
+{if $status == 9}<p class="error">Select a time.</p>{/if}
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
 <table class="slot_table">
     {section name=timeSlot loop=$timeSlots}
         <tr><td>{if $timeSlots[timeSlot].status != 1}<a href="{$url}?action=selectSlot&value={$timeSlots[timeSlot].from_hour}-{$timeSlots[timeSlot].from_minute}">{/if}

@@ -1,10 +1,13 @@
 {literal}
 <style type="text/css">
-
+    .error {
+        color: #FF0000;
+    }
 </style>
 {/literal}
 
-<h1>Done!</h1>
+<h1>{if $status == 0}Done!{else}Error!{/if}</h1>
+{if $status == 11}<p class="error">Unable to connect to Calendar. Please try again later.</p>{/if}
 
 {if $status == 0}
     All done, thanks! You will receive a confirmation e-mail shortly.<br/><br/>

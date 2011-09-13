@@ -94,6 +94,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         'selected_d', 'selected_m', 'selected_y', 'selected_minute', 'selected_hour',
         'user', 'step', 'selected_type', 'appointment_id'
         );
+    var $templateVars = array(
+        'day', 'month', 'year', 'minute', 'hour', 'user', 'step', 'type', 'appointmentId'
+        );
     var $requiredVars = array(
             1 => array('selected_type'),
             2 => array('selected_d', 'selected_m', 'selected_y'),
@@ -138,34 +141,30 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function performStep($step) {
         return call_user_func(array($this, "actionStep" . $step));
     }
+    
+    private function getBasicTplData() {
+        $tpl_data = array();
+        for ($i = 0; $i < count($this->templateVars); ++$i) {
+            $tpl_data[$this->templateVars[$i]] = $_SESSION[$this->sessionVars[$i]];
+        }
+        $tpl_data['status'] = $this->error;
+        $tpl_data['url'] = $this->pi_getPageLink($GLOBALS['TSFE']->id);
+        return $tpl_data;
+    }
 
     private function actionSelectType($type) {
         $_SESSION['selected_type'] = $type;
     }
 
     private function actionStep1() {
-        $tpl_data = array(
-            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'types' => $this->types,
-            'selectedType' => $_SESSION['selected_type'],
-            'error' => $this->error,
-        );
+        $tpl_data = $this->getBasicTplData();
+        $tpl_data['types'] = $this->types;
         $this->prepareTpl($tpl_data);
         return $this->tpl->display($this->conf['templateFileStep1']);
     }
 
     private function actionStepCancel() {
-        $tpl_data = array(
-            'status' => $this->error,
-            'month' => $_SESSION['selected_m'],
-            'year' => $_SESSION['selected_y'],
-            'day' => $_SESSION['selected_d'],
-            'minute' => $_SESSION['selected_minute'],
-            'hour' => $_SESSION['selected_hour'],
-            'type' => $_SESSION['selected_type'],
-            'user' => $_SESSION['user'],
-        );
-        $this->prepareTpl($tpl_data);
+        $this->prepareTpl($this->getBasicTplData());
         
         if ($this->error == 0) {
             $this->sendEmail($_SESSION['user']['email'],
@@ -210,9 +209,22 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         return false;
     }
 
+    private function getHttpClient() {
+        $client = null;
+        try {
+            $client = Zend_Gdata_ClientLogin::getHttpClient(
+                $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        } catch (Zend_Gdata_App_HttpException $e) {
+            $this->error = 11;
+            $client = null;
+        }
+        return $client;
+    }
+    
     private function rebuildEventCache() {
-        $client = Zend_Gdata_ClientLogin::getHttpClient(
-            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $client = $this->getHttpClient();
+        if ($client == null) return;
+ 
         $gcal = new Zend_Gdata_Calendar($client);
         $month = ($_SESSION['step'] == 1) ? $_SESSION['date_m'] : $_SESSION['selected_m'];
         $year = ($_SESSION['step'] == 1) ? $_SESSION['date_y'] : $_SESSION['selected_y'];
@@ -237,8 +249,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function removeEvent($id) {
-        $client = Zend_Gdata_ClientLogin::getHttpClient(
-            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $client = $this->getHttpClient();
+        if ($client == null) return;
         $gcal = new Zend_Gdata_Calendar($client);
 
         try {
@@ -252,8 +264,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function addEvent($start, $end) {
-        $client = Zend_Gdata_ClientLogin::getHttpClient(
-            $this->conf['gcal_username'], $this->conf['gcal_password'], Zend_Gdata_Calendar::AUTH_SERVICE_NAME);
+        $client = $this->getHttpClient();
+        if ($client == null) return;
         $gcal = new Zend_Gdata_Calendar($client);
 
         $title = htmlentities($this->conf['eventTitle'] . $_SESSION['user']['username']);
@@ -292,19 +304,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if ($this->containsEvent($start, $end)) $status = 2;
         else $status = $this->addEvent($start, $end) ? 0 : 1;
 
-        $tpl_data = array(
-            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'month' => $_SESSION['selected_m'],
-            'year' => $_SESSION['selected_y'],
-            'day' => $_SESSION['selected_d'],
-            'minute' => $_SESSION['selected_minute'],
-            'hour' => $_SESSION['selected_hour'],
-            'status' => $status,
-            'type' => $_SESSION['selected_type'],
-            'appointmentId' => $_SESSION['appointment_id'],
-            'siteRootUrl' => $this->getSiteRootUrl(),
-            'user' => $_SESSION['user'],
-        );
+        $this->error = ($this->error == 0) ? $status : $this->error;
+        $tpl_data = $this->getBasicTplData();
+        $tpl_data['siteRootUrl'] = $this->getSiteRootUrl();
         $this->prepareTpl($tpl_data);
 
         if ($status == 0) {
@@ -397,16 +399,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         }
         if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
-        $tpl_data = array(
-            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'month' => $_SESSION['selected_m'],
-            'year' => $_SESSION['selected_y'],
-            'day' => $_SESSION['selected_d'],
-            'minute' => $_SESSION['selected_minute'],
-            'hour' => $_SESSION['selected_hour'],
-            'error' => $this->error,
-        );
-        $this->prepareTpl($tpl_data);
+        $this->prepareTpl($this->getBasicTplData());
 
         return $this->tpl->display($this->conf['templateFileStep4']);
     }
@@ -492,14 +485,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         }
         $slots = $this->getSlots($_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
         
-        $tpl_data = array(
-            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'month' => $_SESSION['selected_m'],
-            'year' => $_SESSION['selected_y'],
-            'day' => $_SESSION['selected_d'],
-            'timeSlots' => $slots,
-            'error' => $this->error,
-        );
+        $tpl_data = $this->getBasicTplData();
+        $tpl_data['timeSlots'] = $slots;
         $this->prepareTpl($tpl_data);
         
         return $this->tpl->display($this->conf['templateFileStep3']);
@@ -554,14 +541,12 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $this->getMonthDays($_SESSION['date_m'], $_SESSION['date_y'], $_SESSION['date_d'])
         );
 
-        $tpl_data = array(
-            'url' => $this->pi_getPageLink($GLOBALS['TSFE']->id),
-            'month' => $_SESSION['date_m'],
-            'year' => $_SESSION['date_y'],
-            'days' => $days,
-            'weekdayNames' => explode(',', $this->conf['calendarWeekdayNames']),
-            'error' => $this->error,
-        );
+        $tpl_data = $this->getBasicTplData();
+        $tpl_data['days'] = $days;
+        $tpl_data['weekdayNames'] = explode(',', $this->conf['calendarWeekdayNames']);
+        $tpl_data['curMonth'] = $_SESSION['date_m'];
+        $tpl_data['curYear'] = $_SESSION['date_y'];
+
         $this->prepareTpl($tpl_data);
 
         return $this->tpl->display($this->conf['templateFileStep2']);
