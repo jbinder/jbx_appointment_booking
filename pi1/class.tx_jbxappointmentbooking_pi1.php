@@ -80,6 +80,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mailSubjectCancelAdmin' => "Appointment cancelled",
             'adminEmail' => "test@test.test",
             'types' => 'type1, type2, type3',
+            'autoContinueAfterSteps' => '1,2,3,4,5',
         );
 
     var $templateFiles = array(
@@ -130,6 +131,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function handleAction($action) {
         call_user_func(array($this, "action" . $action), t3lib_div::_GET('value'));
+        if (in_array($_SESSION['step'], $this->conf['autoContinueAfterSteps'])) $this->actionNextStep(); 
     }
 
     private function performStep($step) {
