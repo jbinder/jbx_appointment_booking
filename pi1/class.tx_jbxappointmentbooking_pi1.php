@@ -498,11 +498,24 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if ($this->conf['mergeDateAndTimeSteps'] && $_SESSION['step'] == $this->stepSlot) --$_SESSION['step'];
         if ($_SESSION['step'] < 1) $_SESSION['step'] = 1;
     }
+    
+    private function checkRequired($step) {
+        foreach ($this->requiredVars[$step] as $requiredVar) {
+            if (!isset($_SESSION[$requiredVar])) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     private function actionNextStep() {
-        foreach ($this->requiredVars[$_SESSION['step']] as $requiredVar) {
-            if (!isset($_SESSION[$requiredVar])) {
-                $this->error = 9;
+        if (!$this->checkRequired($_SESSION['step'])) {
+            $this->error = 9;
+            return;
+        }
+        if ($this->conf['mergeDateAndTimeSteps'] && $_SESSION['step'] == ($this->stepSlot - 1)) {
+            if (!$this->checkRequired($_SESSION['step'] + 1)) {
+                $this->error = 10;
                 return;
             }
         }

@@ -53,6 +53,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     templateFileStep4 = EXT:jbx_appointment_booking/tpl/jbx_appointment_user_login.html
     templateFileStep5 = EXT:jbx_appointment_booking/tpl/jbx_appointment_done.html
     templateFileStepCancel = EXT:jbx_appointment_booking/tpl/jbx_appointment_cancel.html
+    templateFileStepMonthSlot = EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month_slot.html
     templateEmailSubscribeUser = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_user.txt
     templateEmailSubscribeAdmin = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt
     templateEmailCancelUser = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_user.txt
