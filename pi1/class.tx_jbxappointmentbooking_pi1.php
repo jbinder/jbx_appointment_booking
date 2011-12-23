@@ -589,7 +589,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         for ($i = 1; $i <= $days_in_month; ++$i) {
             $status = 2;
             $cur_m = date("m");
-            if (($date_m < $cur_m) || ($date_m == $cur_m && $i <= $date_d)) $status = 0;
+            $cur_y = date("Y");
+            if (($date_y < $cur_y) || ($date_y == $cur_y && $date_m < $cur_m) || ($date_y == $cur_y && $date_m == $cur_m && $i <= $date_d)) $status = 0;
             else if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
             else {
                 $slots = $this->getSlots($date_m, $i, $date_y);
