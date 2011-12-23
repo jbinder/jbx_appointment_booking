@@ -83,6 +83,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'types' => 'type1, type2, type3',
             'autoContinueAfterActions' => '', /*'selectType, select, selectSlot', */
             'mergeDateAndTimeSteps' => false,
+            'calendarEventFeedURI' => 'https://www.google.com/calendar/feeds/default/private/full',
         );
 
     var $templateFiles = array(
@@ -235,10 +236,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $start_time = mktime(0, 0, 0, $month, 1, $year);
         $end_time = mktime(0, 0, 0, $month + 1, 1, $year);
         try {
-            $query = $gcal->newEventQuery();
+            $query = $gcal->newEventQuery($this->conf['calendarEventFeedURI']);
             $query->setFutureevents('true');
-            $query->setVisibility('private');
-            $query->setProjection('full');
+            $query->setUser(null);
+            $query->setVisibility(null);
+            $query->setProjection(null);
             $query->setStartMin(date("c", $start_time));
             $query->setStartMax(date("c", $end_time));
             $eventFeed = $gcal->getCalendarEventFeed($query);
@@ -291,7 +293,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $event->when = array($when);
             $content = $gcal->newContent($description);
             $event->content = $content;
-            $new_event = $gcal->insertEvent($event);
+            $new_event = $gcal->insertEvent($event, $this->conf['calendarEventFeedURI']);
         } catch (Zend_Gdata_App_Exception $e) {
             return false;
         }

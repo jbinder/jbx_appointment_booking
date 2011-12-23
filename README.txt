@@ -39,6 +39,14 @@ gcal_password // Google Calendar password
 userGroup // the group which newly registered user will be assigned to
 adminEmail // the e-mail address which will receive notifications about new and cancelled appointments
 
+To use an other calendar that the default one:
+Set the calendarEventFeedURI parameter to the Feed URI of the desired calendar.
+You get the basic URI from your Google Calendar account:
+Calendar settings / Calendar Address / XML
+It looks like this: https://www.google.com/calendar/feeds/user/public/basic
+Change the last part of this URI from public/basic to private/full to get the correct Feed URI.
+It should look like this: https://www.google.com/calendar/feeds/user/private/full
+
 Other important parameters are:
 slotLength // appointment slot length in minutes
 types // the appointment types which can be selected by the user
@@ -75,6 +83,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     types = type1, type2, type3
     autoContinueAfterActions = selectType, select, selectSlot
     mergeDateAndTimeSteps = false
+    calendarEventFeedURI = https://www.google.com/calendar/feeds/default/private/full
 }
 
 == Styling ==
