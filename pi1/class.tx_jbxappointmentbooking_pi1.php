@@ -41,6 +41,7 @@ Zend_Loader::loadClass('Zend_Gdata_ClientLogin');
 Zend_Loader::loadClass('Zend_Gdata_Calendar');
 Zend_Loader::loadClass('Zend_Http_Client');
 
+require_once(dirname(__FILE__) . '/../lib/CalendarFixed.php');
 
 /**
  * Plugin 'Appointment Booking' for the 'jbx_appointment_booking' extension.
@@ -257,7 +258,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function removeEvent($id) {
         $client = $this->getHttpClient();
         if ($client == null) return;
-        $gcal = new Zend_Gdata_Calendar($client);
+        $gcal = new Zend_Gdata_Calendar_Fixed($client);
 
         try {
             $event = $gcal->getCalendarEventEntry($id);
