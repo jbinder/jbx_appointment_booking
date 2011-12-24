@@ -51,6 +51,8 @@ Other important parameters are:
 slotLength // appointment slot length in minutes
 types // the appointment types which can be selected by the user
 userPID // page id where newly registered users are stored
+autoContinueAfterActions // automatically switch to the next page after valid input, e.g. selectType, select, selectSlot
+additionalRegisterUserData // additional fields for the user registration, e.g. address, city, zip, telephone
 
 Following is the default TypoScript configuration:
 
@@ -81,9 +83,10 @@ plugin.tx_jbxappointmentbooking_pi1 {
     mailSubjectCancelAdmin = Appointment cancelled
     adminEmail = test@test.test
     types = type1, type2, type3
-    autoContinueAfterActions = selectType, select, selectSlot
+    autoContinueAfterActions = 
     mergeDateAndTimeSteps = false
     calendarEventFeedURI = https://www.google.com/calendar/feeds/default/private/full
+    additionalRegisterUserData = 
 }
 
 == Styling ==

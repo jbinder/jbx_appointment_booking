@@ -85,6 +85,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'autoContinueAfterActions' => '', /*'selectType, select, selectSlot', */
             'mergeDateAndTimeSteps' => false,
             'calendarEventFeedURI' => 'https://www.google.com/calendar/feeds/default/private/full',
+            'additionalRegisterUserData' => '', /*address, city, zip, telephone', */
         );
 
     var $templateFiles = array(
@@ -117,6 +118,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $error = 0;
     var $types = array();
     var $autoContinueAfterActions = array();
+    var $basicRegisterUserData = array('username', 'password', 'email', 'first_name', 'last_name');
+    var $additionalRegisterUserData = array();
 
     /**
      * The main method of the PlugIn
@@ -378,7 +381,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function actionRegister() {
-        $fields = array('username', 'password', 'email', 'first_name', 'last_name');
+        $fields = array_merge($this->additionalRegisterUserData, $this->basicRegisterUserData);
         $data = array();
         foreach ($fields as $field) {
             $value = t3lib_div::_POST($field);
@@ -646,6 +649,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->types = $this->explodeTrimmed($this->conf['types']);
         $this->autoContinueAfterActions = $this->explodeTrimmed($this->conf['autoContinueAfterActions']);
+        $this->additionalRegisterUserData = $this->explodeTrimmed($this->conf['additionalRegisterUserData']);
         
         if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
             $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
