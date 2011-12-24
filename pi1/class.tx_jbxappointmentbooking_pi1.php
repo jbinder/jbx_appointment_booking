@@ -67,6 +67,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'templateEmailSubscribeAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt',
             'templateEmailCancelUser' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_user.txt',
             'templateEmailCancelAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_admin.txt',
+            'templateEmailRegisterAdmin' => 'EXT:jbx_appointment_booking/tpl/jbx_appointment_email_register_admin.txt',
             'calendarWeekdayNames' => 'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
             'slotLength' => 75,
             'gcal_username' => '',
@@ -80,6 +81,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mailSubjectSubscribeAdmin' => "New appointment",
             'mailSubjectCancelUser' => "Your appointment",
             'mailSubjectCancelAdmin' => "Appointment cancelled",
+            'mailSubjectRegisterAdmin' => "New user",
             'adminEmail' => "test@test.test",
             'types' => 'type1, type2, type3',
             'autoContinueAfterActions' => '', /*'selectType, select, selectSlot', */
@@ -91,7 +93,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $templateFiles = array(
         'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStep5', 'templateFileStepCancel',
         'templateEmailSubscribeUser', 'templateEmailSubscribeAdmin', 'templateEmailCancelUser', 'templateEmailCancelAdmin',
-        'templateFileStepMonthSlot'
+        'templateFileStepMonthSlot', 'templateEmailRegisterAdmin'
         );
     var $numSteps = 5;
     var $stepSlot = 3;
@@ -399,6 +401,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if (!$res) {
             $this->error = 3;
             return;
+        } else {
+            $data['uid'] = $this->db->sql_insert_id();
+            $this->tpl->assign("user", $data);
+            $this->sendEmail($this->conf['adminEmail'],
+                $this->conf['mailSubjectRegisterAdmin'], $this->conf['templateEmailRegisterAdmin']);
         }
         $this->actionLogin();
     }

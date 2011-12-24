@@ -68,6 +68,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     templateEmailSubscribeAdmin = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_subscribe_admin.txt
     templateEmailCancelUser = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_user.txt
     templateEmailCancelAdmin = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_cancel_admin.txt
+    templateEmailRegisterAdmin = EXT:jbx_appointment_booking/tpl/jbx_appointment_email_register_admin.txt
     calendarWeekdayNames = Sun,Mon,Tue,Wed,Thu,Fri,Sat,
     slotLength = 75
     gcal_username = 
@@ -81,6 +82,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     mailSubjectSubscribeAdmin = New appointment
     mailSubjectCancelUser = Your appointment
     mailSubjectCancelAdmin = Appointment cancelled
+    mailSubjectRegisterAdmin = New user
     adminEmail = test@test.test
     types = type1, type2, type3
     autoContinueAfterActions = 
