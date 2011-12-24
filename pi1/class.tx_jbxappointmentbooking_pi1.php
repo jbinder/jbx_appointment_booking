@@ -386,12 +386,27 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $fields = array_merge($this->additionalRegisterUserData, $this->basicRegisterUserData);
         $data = array();
         foreach ($fields as $field) {
+            if (empty($field)) {
+                unset($fields[$field]);
+                continue;
+            }
             $value = t3lib_div::_POST($field);
             if (empty($value)) {
                 $this->error = 2;
                 return;
             }
             $data[$field] = mysql_real_escape_string($value);
+        }
+        if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $this->error = 5;
+            return;
+        }
+        $res = $this->db->exec_SELECTquery("*", 'fe_users',
+            "deleted = 0 and (username = '" . $data["username"] . "' or email = '" . $data['email'] . "')"
+        );
+        if ($this->db->sql_num_rows($res) > 0) {
+            $this->error = 4;
+            return;
         }
         $data['pid'] = $this->conf['userPID'];
         $data['usergroup'] = $this->conf['userGroup'];

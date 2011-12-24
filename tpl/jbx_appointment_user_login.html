@@ -23,6 +23,8 @@ Password:<br/>
 <h3>Or Register!</h3>
 {if $status == 2}<p class="error">Please fill out all fields!</p>{/if}
 {if $status == 3}<p class="error">An unknown error occurred. Please try again later.</p>{/if}
+{if $status == 4}<p class="error">Username or password already taken.</p>{/if}
+{if $status == 5}<p class="error">This E-Mail address is not valid.</p>{/if}
 <form action="{$url}?action=register" method="post">
 Username:<br/>
 <input type="text" name="username" /><br/>
