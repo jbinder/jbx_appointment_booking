@@ -321,6 +321,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->error = ($this->error == 0) ? $status : $this->error;
         $tpl_data = $this->getBasicTplData();
         $tpl_data['siteRootUrl'] = $this->getSiteRootUrl();
+        $tpl_data['user'] = $_SESSION['user'];
         $this->prepareTpl($tpl_data);
 
         if ($status == 0) {
@@ -432,8 +433,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function actionStep4() {
         if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
-        $this->prepareTpl($this->getBasicTplData());
-        $this->tpl->assign('data', $this->getEscapedPost());
+        $tpl_data = $this->getBasicTplData();
+        $tpl_data['data'] = $this->getEscapedPost();
+        $this->prepareTpl($tpl_data);
 
         return $this->tpl->display($this->conf['templateFileStep4']);
     }
