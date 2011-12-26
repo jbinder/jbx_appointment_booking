@@ -248,6 +248,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         try {
             $eventFeed = $this->getEventFeed($gcal, $this->conf['calendarEventFeedURI'], $start_time, $end_time);
             foreach ($this->additionalFeedURIs as $uri) {
+                if (empty($uri)) continue;
                 $additionalEventFeed = $this->getEventFeed($gcal, $uri, $start_time, $end_time);
                 foreach ($additionalEventFeed as $event) $eventFeed->addEntry($event);
             }
