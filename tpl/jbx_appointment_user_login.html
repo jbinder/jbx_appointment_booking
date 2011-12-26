@@ -27,15 +27,15 @@ Password:<br/>
 {if $status == 5}<p class="error">This E-Mail address is not valid.</p>{/if}
 <form action="{$url}?action=register" method="post">
 Username:<br/>
-<input type="text" name="username" /><br/>
+<input type="text" name="username" value="{$data.username}" /><br/>
 Password:<br/>
 <input type="password" name="password" /><br/>
 E-Mail:<br/>
-<input type="text" name="email" /><br/>
+<input type="text" name="email" value="{$data.email}" /><br/>
 First name:<br/>
-<input type="text" name="first_name" /><br/>
+<input type="text" name="first_name" value="{$data.first_name}" /><br/>
 Last name:<br/>
-<input type="text" name="last_name" /><br/>
+<input type="text" name="last_name" value="{$data.last_name}" /><br/>
 <br/>
 <input type="submit" value="register" />
 </form>

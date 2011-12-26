@@ -429,6 +429,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
         $this->prepareTpl($this->getBasicTplData());
+        $this->tpl->assign('data', t3lib_div::_POST());
 
         return $this->tpl->display($this->conf['templateFileStep4']);
     }
