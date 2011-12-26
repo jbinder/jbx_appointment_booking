@@ -47,6 +47,10 @@ It looks like this: https://www.google.com/calendar/feeds/user/public/basic
 Change the last part of this URI from public/basic to private/full to get the correct Feed URI.
 It should look like this: https://www.google.com/calendar/feeds/user/private/full
 
+To check if the desired slot is free on additional calendars:
+Add a coma separated list of Feed URIs (see above) of all calendars which should be checked 
+into the additionalFeedURIs parameter.
+
 Other important parameters are:
 slotLength // appointment slot length in minutes
 types // the appointment types which can be selected by the user
@@ -90,6 +94,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     calendarEventFeedURI = https://www.google.com/calendar/feeds/default/private/full
     additionalRegisterUserData = 
     requiredRegisterUserData = username, password, email
+    additionalFeedURIs = 
 }
 
 == Styling ==

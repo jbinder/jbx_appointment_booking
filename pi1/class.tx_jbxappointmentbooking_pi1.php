@@ -89,6 +89,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'calendarEventFeedURI' => 'https://www.google.com/calendar/feeds/default/private/full',
             'additionalRegisterUserData' => '', /*address, city, zip, telephone', */
             'requiredRegisterUserData' => 'username, password, email',
+            'additionalFeedURIs' => '',
         );
 
     var $templateFiles = array(
@@ -124,6 +125,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $basicRegisterUserData = array('username', 'password', 'email', 'first_name', 'last_name');
     var $additionalRegisterUserData = array();
     var $requiredRegisterUserData = array();
+    var $additionalFeedURIs = array();
 
     /**
      * The main method of the PlugIn
@@ -244,18 +246,26 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $start_time = mktime(0, 0, 0, $month, 1, $year);
         $end_time = mktime(0, 0, 0, $month + 1, 1, $year);
         try {
-            $query = $gcal->newEventQuery($this->conf['calendarEventFeedURI']);
-            $query->setFutureevents('true');
-            $query->setUser(null);
-            $query->setVisibility(null);
-            $query->setProjection(null);
-            $query->setStartMin(date("c", $start_time));
-            $query->setStartMax(date("c", $end_time));
-            $eventFeed = $gcal->getCalendarEventFeed($query);
+            $eventFeed = $this->getEventFeed($gcal, $this->conf['calendarEventFeedURI'], $start_time, $end_time);
+            foreach ($this->additionalFeedURIs as $uri) {
+                $additionalEventFeed = $this->getEventFeed($gcal, $uri, $start_time, $end_time);
+                foreach ($additionalEventFeed as $event) $eventFeed->addEntry($event);
+            }
         } catch (Zend_Gdata_App_Exception $e) {
             return false;
         }
         $this->eventCache = $eventFeed;
+    }
+
+    private function getEventFeed(&$gcal, $uri, $start_time, $end_time) {
+        $query = $gcal->newEventQuery($uri);
+        $query->setFutureevents('true');
+        $query->setUser(null);
+        $query->setVisibility(null);
+        $query->setProjection(null);
+        $query->setStartMin(date("c", $start_time));
+        $query->setStartMax(date("c", $end_time));
+        return $gcal->getCalendarEventFeed($query);
     }
 
     private function clearEventCache() {
@@ -688,7 +698,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->autoContinueAfterActions = $this->explodeTrimmed($this->conf['autoContinueAfterActions']);
         $this->additionalRegisterUserData = $this->explodeTrimmed($this->conf['additionalRegisterUserData']);
         $this->requiredRegisterUserData = $this->explodeTrimmed($this->conf['requiredRegisterUserData']);
-        
+        $this->additionalFeedURIs = $this->explodeTrimmed($this->conf['additionalFeedURIs']);
+
         if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
             $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;
         } else {
