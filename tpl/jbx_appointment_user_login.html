@@ -21,17 +21,32 @@ Password:<br/>
 </form>
         
 <h3>Or Register!</h3>
-{if $status == 2}<p class="error">Please fill out all fields!</p>{/if}
+{if $status == 2}<p class="error">Please fill out all required fields!</p>{/if}
 {if $status == 3}<p class="error">An unknown error occurred. Please try again later.</p>{/if}
 {if $status == 4}<p class="error">Username or password already taken.</p>{/if}
 {if $status == 5}<p class="error">This E-Mail address is not valid.</p>{/if}
 <form action="{$url}?action=register" method="post">
-Username:<br/>
+{if $username_error}
+<b>Username *:</b><br/>
+<input type="text" name="username" value="{$data.username}" /> Cannot be empty!<br/>
+{else}
+Username *:<br/>
 <input type="text" name="username" value="{$data.username}" /><br/>
-Password:<br/>
+{/if}
+{if $password_error}
+<b>Password *:</b><br/>
+<input type="password" name="password" /> Cannot be empty!<br/>
+{else}
+Password *:<br/>
 <input type="password" name="password" /><br/>
-E-Mail:<br/>
+{/if}
+{if $email_error}
+<b>E-Mail *:</b><br/>
+<input type="text" name="email" value="{$data.email}" /> Cannot be empty!<br/>
+{else}
+E-Mail *:<br/>
 <input type="text" name="email" value="{$data.email}" /><br/>
+{/if}
 First name:<br/>
 <input type="text" name="first_name" value="{$data.first_name}" /><br/>
 Last name:<br/>

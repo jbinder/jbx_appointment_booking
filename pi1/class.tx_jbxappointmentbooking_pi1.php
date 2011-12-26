@@ -88,6 +88,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'mergeDateAndTimeSteps' => false,
             'calendarEventFeedURI' => 'https://www.google.com/calendar/feeds/default/private/full',
             'additionalRegisterUserData' => '', /*address, city, zip, telephone', */
+            'requiredRegisterUserData' => 'username, password, email',
         );
 
     var $templateFiles = array(
@@ -122,6 +123,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $autoContinueAfterActions = array();
     var $basicRegisterUserData = array('username', 'password', 'email', 'first_name', 'last_name');
     var $additionalRegisterUserData = array();
+    var $requiredRegisterUserData = array();
 
     /**
      * The main method of the PlugIn
@@ -385,18 +387,20 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function actionRegister() {
         $fields = array_merge($this->additionalRegisterUserData, $this->basicRegisterUserData);
         $data = array();
+        $post = $this->getEscapedPost();
         foreach ($fields as $field) {
             if (empty($field)) {
                 unset($fields[$field]);
                 continue;
             }
-            $value = t3lib_div::_POST($field);
-            if (empty($value)) {
+            $value = $post[$field];
+            if (empty($value) && in_array($field, $this->requiredRegisterUserData)) {
                 $this->error = 2;
-                return;
+                $this->tpl->assign($field . "_error", 1);
             }
-            $data[$field] = mysql_real_escape_string($value);
+            $data[$field] = $value;
         }
+        if ($this->error == 2) return;
         if(!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             $this->error = 5;
             return;
@@ -429,9 +433,17 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if ($_SESSION['user']['uid'] > 0) return $this->actionStep5();
         
         $this->prepareTpl($this->getBasicTplData());
-        $this->tpl->assign('data', t3lib_div::_POST());
+        $this->tpl->assign('data', $this->getEscapedPost());
 
         return $this->tpl->display($this->conf['templateFileStep4']);
+    }
+
+    private function getEscapedPost() {
+        $data = array();
+        foreach (t3lib_div::_POST() as $key => $value) {
+            $data[$key] = mysql_real_escape_string($value);
+        }
+        return $data;
     }
 
     private function actionSelectSlot($time) {
@@ -673,6 +685,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->types = $this->explodeTrimmed($this->conf['types']);
         $this->autoContinueAfterActions = $this->explodeTrimmed($this->conf['autoContinueAfterActions']);
         $this->additionalRegisterUserData = $this->explodeTrimmed($this->conf['additionalRegisterUserData']);
+        $this->requiredRegisterUserData = $this->explodeTrimmed($this->conf['requiredRegisterUserData']);
         
         if ($GLOBALS["TSFE"]->fe_user->user["uid"] > 0) {
             $_SESSION['user'] = $GLOBALS["TSFE"]->fe_user->user;

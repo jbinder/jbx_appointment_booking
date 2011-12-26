@@ -89,6 +89,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     mergeDateAndTimeSteps = false
     calendarEventFeedURI = https://www.google.com/calendar/feeds/default/private/full
     additionalRegisterUserData = 
+    requiredRegisterUserData = username, password, email
 }
 
 == Styling ==
