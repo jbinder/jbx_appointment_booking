@@ -126,6 +126,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $additionalRegisterUserData = array();
     var $requiredRegisterUserData = array();
     var $additionalFeedURIs = array();
+    var $maxResultsPerFeed = 99999;
 
     /**
      * The main method of the PlugIn
@@ -266,6 +267,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $query->setProjection(null);
         $query->setStartMin(date("c", $start_time));
         $query->setStartMax(date("c", $end_time));
+        $query->setMaxResults($this->maxResultsPerFeed);
         return $gcal->getCalendarEventFeed($query);
     }
 
