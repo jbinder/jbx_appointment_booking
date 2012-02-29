@@ -515,9 +515,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function getSlotRanges($season_id, $weekday) {
+        $query = (!empty($this->conf['storagePid'])) ? " pid = {$this->conf['storagePid']} and " : "";
         $slot_ranges = array();
         $res = $this->db->exec_SELECTquery("*", $this->slotTableName,
-            "hidden = 0 and deleted = 0 and pid = {$this->conf['storagePid']} and " .
+            "hidden = 0 and deleted = 0 and $query " .
             "season = $season_id and weekday = $weekday",
             "",
             "from_hour, from_minute"
@@ -535,8 +536,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     private function getSeason($month, $day)
     {
+        $query = (!empty($this->conf['storagePid'])) ? "pid = {$this->conf['storagePid']} and " : "";
         $res = $this->db->exec_SELECTquery("*", $this->seasonTableName,
-            "hidden = 0 and deleted = 0 and pid = {$this->conf['storagePid']} and " .
+            "hidden = 0 and deleted = 0 and $query " .
             "(from_month < $month and until_month > $month) or " .
             "((from_month = $month or until_month = $month) and from_day <= $day and until_day >= $day)"
         );
@@ -701,7 +703,6 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             if (!empty($val)) $this->conf[$field] = $val;
         }
         foreach ($this->templateFiles as $templateFile) $this->cleanUpTemplateFilePath($templateFile);
-        if (!isset($this->conf['storagePid'])) $this->conf['storagePid'] = $GLOBALS["TSFE"]->id;
 
         $this->tpl = tx_smarty::smarty();
         $this->db = $GLOBALS['TYPO3_DB'];
