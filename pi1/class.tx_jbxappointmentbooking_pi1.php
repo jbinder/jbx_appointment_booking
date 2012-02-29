@@ -117,6 +117,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             3 => array('selected_minute', 'selected_hour'),
             4 => array('user'),
         );
+    var $maxResultsPerFeed = 99999;
 
     var $tpl = null;
     var $db = null;
@@ -276,6 +277,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $query->setProjection(null);
         $query->setStartMin(date("c", $start_time));
         $query->setStartMax(date("c", $end_time));
+        $query->setMaxResults($this->maxResultsPerFeed);
         return $gcal->getCalendarEventFeed($query);
     }
 
