@@ -146,10 +146,16 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
         $this->init();
 
+        if (!$this->isActiveInstance()) $this->resetSession();
+
         $this->handleAction(t3lib_div::_GET('action'));
         $content = $this->performStep($_SESSION['step']);
         
         return $this->pi_wrapInBaseClass($content);
+    }
+
+    private function isActiveInstance() {
+        return in_array($_SESSION['selected_type'], $this->types);
     }
 
     private function handleAction($action) {
