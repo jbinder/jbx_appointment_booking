@@ -91,6 +91,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'requiredRegisterUserData' => 'username, password, email',
             'additionalFeedURIs' => '',
         );
+    var $flexFormFields = array(
+        'storagePid', 'slotLength', 'types',
+    );
 
     var $templateFiles = array(
         'templateFileStep1', 'templateFileStep2', 'templateFileStep3', 'templateFileStep4', 'templateFileStep5', 'templateFileStepCancel',
@@ -139,6 +142,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $this->pi_setPiVarDefaults();
         $this->pi_loadLL();
         $this->pi_USER_INT_obj = 1;    // Configuring so caching is not expected. This value means that no cHash params are ever set. We do this, because it's a USER_INT object!
+        $this->pi_initPIflexForm();
 
         $this->init();
 
@@ -505,7 +509,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function getSlotRanges($season_id, $weekday) {
         $slot_ranges = array();
         $res = $this->db->exec_SELECTquery("*", $this->slotTableName,
-            "hidden = 0 and deleted = 0 and " .
+            "hidden = 0 and deleted = 0 and pid = {$this->conf['storagePid']} and " .
             "season = $season_id and weekday = $weekday",
             "",
             "from_hour, from_minute"
@@ -524,7 +528,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     private function getSeason($month, $day)
     {
         $res = $this->db->exec_SELECTquery("*", $this->seasonTableName,
-            "hidden = 0 and deleted = 0 and " .
+            "hidden = 0 and deleted = 0 and pid = {$this->conf['storagePid']} and " .
             "(from_month < $month and until_month > $month) or " .
             "((from_month = $month or until_month = $month) and from_day <= $day and until_day >= $day)"
         );
@@ -683,6 +687,10 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     function init() {
         foreach ($this->defaultConf as $key => $val) {
             if (empty($this->conf[$key])) $this->conf[$key] = $this->defaultConf[$key];
+        }
+        foreach ($this->flexFormFields as $field) {
+            $val = $this->pi_getFFvalue($this->cObj->data['pi_flexform'], $field);
+            if (!empty($val)) $this->conf[$field] = $val;
         }
         foreach ($this->templateFiles as $templateFile) $this->cleanUpTemplateFilePath($templateFile);
         if (!isset($this->conf['storagePid'])) $this->conf['storagePid'] = $GLOBALS["TSFE"]->id;

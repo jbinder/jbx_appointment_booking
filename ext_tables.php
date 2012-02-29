@@ -58,4 +58,9 @@ $TCA['tx_jbxappointmentbooking_slot_range'] = array (
 		'iconfile'          => t3lib_extMgm::extRelPath($_EXTKEY).'icon_tx_jbxappointmentbooking_slot_range.gif',
 	),
 );
+
+$TCA['tt_content']['types']['list']['subtypes_addlist'][$_EXTKEY.'_pi1'] ='pi_flexform';
+
+t3lib_extMgm::addPiFlexFormValue($_EXTKEY.'_pi1', 'FILE:EXT:'.$_EXTKEY . '/flexform.xml');
+
 ?>

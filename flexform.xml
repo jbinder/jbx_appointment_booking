@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<T3DataStructure>
+  <meta>
+    <langDisable>1</langDisable>
+  </meta>
+  <sheets>
+    <sDEF>
+      <ROOT>
+        <TCEforms>
+          <sheetTitle>Options</sheetTitle>
+        </TCEforms>
+        <type>array</type>
+        <el>
+          <types>
+            <TCEforms>
+              <label>Types</label>
+              <config>
+                <type>input</type>
+                <size>20</size>
+                <max>30</max>
+                <eval>trim</eval>
+              </config>
+            </TCEforms>
+          </types>
+          <slotLength>
+            <TCEforms>
+              <label>Slot length</label>
+              <config>
+                <type>input</type>
+                <size>20</size>
+                <max>30</max>
+                <eval>trim</eval>
+              </config>
+            </TCEforms>
+          </slotLength>
+          <storagePid>
+            <TCEforms>
+              <label>Storage PID</label>
+              <config>
+                <type>input</type>
+                <size>20</size>
+                <max>30</max>
+                <eval>trim</eval>
+              </config>
+            </TCEforms>
+          </storagePid>
+        </el>
+      </ROOT>
+    </sDEF>
+  </sheets>
+</T3DataStructure>
