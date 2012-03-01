@@ -130,7 +130,6 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     var $additionalRegisterUserData = array();
     var $requiredRegisterUserData = array();
     var $additionalFeedURIs = array();
-    var $maxResultsPerFeed = 99999;
 
     /**
      * The main method of the PlugIn
