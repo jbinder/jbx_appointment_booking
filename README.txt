@@ -58,6 +58,8 @@ userPID // page id where newly registered users are stored
 autoContinueAfterActions // automatically switch to the next page after valid input, e.g. selectType, select, selectSlot
 additionalRegisterUserData // additional fields for the user registration, e.g. address, city, zip, telephone
 
+storagePid // PID which holds the season data. if set only the specific season will be taken into account. useful for multiple calenders.
+
 Following is the default TypoScript configuration:
 
 plugin.tx_jbxappointmentbooking_pi1 {

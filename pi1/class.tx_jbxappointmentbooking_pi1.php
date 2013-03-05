@@ -3,7 +3,7 @@ ini_set('display_errors','On'); // error_reporting(E_ALL);
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2011 Johannes Binder <j.binder.x@gmail.com>
+*  (c) 2011-2013 Johannes Binder <j.binder.x@gmail.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -30,18 +30,24 @@ ini_set('display_errors','On'); // error_reporting(E_ALL);
 
 require_once(PATH_tslib.'class.tslib_pibase.php');
 
-require_once(dirname(__FILE__) . '/../lib/phpmailer_lite/class.phpmailer-lite.php');
-
-set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__) . "/../lib/zend_gdata/library/");
+$includePaths = array(
+    get_include_path(),
+    t3lib_extMgm::extPath('jbx_appointment_booking').'src',
+    t3lib_extMgm::extPath('jbx_appointment_booking').'lib',
+    t3lib_extMgm::extPath('jbx_appointment_booking').'lib/zend_gdata/library/',
+);
+set_include_path(join(PATH_SEPARATOR, $includePaths));
 session_start();
 
-require_once 'Zend/Loader.php';
+require_once('UserManagement.php');
+
+require_once('phpmailer_lite/class.phpmailer-lite.php');
+require_once('Zend/Loader.php');
 Zend_Loader::loadClass('Zend_Gdata');
 Zend_Loader::loadClass('Zend_Gdata_ClientLogin');
 Zend_Loader::loadClass('Zend_Gdata_Calendar');
 Zend_Loader::loadClass('Zend_Http_Client');
-
-require_once(dirname(__FILE__) . '/../lib/CalendarFixed.php');
+require_once('CalendarFixed.php');
 
 /**
  * Plugin 'Appointment Booking' for the 'jbx_appointment_booking' extension.
@@ -90,6 +96,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             'additionalRegisterUserData' => '', /*address, city, zip, telephone', */
             'requiredRegisterUserData' => 'username, password, email',
             'additionalFeedURIs' => '',
+            'debug' => 0,
+            'userManagementImpl' => 'PasswordUserManagement',
         );
     var $flexFormFields = array(
         'storagePid', 'slotLength', 'types',
@@ -121,6 +129,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
 
     var $tpl = null;
     var $db = null;
+
+    /* @var $userManagement UserManagement */
+    var $userManagement = null;
 
     var $eventCache = null;
     var $error = 0;
@@ -179,6 +190,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     }
 
     private function actionSelectType($type) {
+        $this->resetSession();
         $_SESSION['selected_type'] = $type;
     }
 
@@ -228,6 +240,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
                 $cur_start_time = strtotime($when->startTime);
                 $cur_end_time = strtotime($when->endTime);
                 if ($cur_start_time > $start && $cur_start_time < $end) return true;
+                if ($cur_start_time == $start && $cur_start_time == $end) return true;
                 if ($cur_start_time <= $start && $cur_end_time > $start) return true;
                 if ($cur_end_time > $start && $cur_end_time < $end) return true;
             }
@@ -309,7 +322,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $start = date(DATE_ATOM, $start);
         $end = date(DATE_ATOM, $end);
         $description = "{$_SESSION['user']['username']} ({$_SESSION['user']['name']}, " .
-            "{$_SESSION['user']['uid']}), {$_SESSION['user']['email']}\n{$_SESSION['selected_type']}";
+            "{$_SESSION['user']['uid']}), {$_SESSION['user']['email']}, {$_SESSION['user']['telephone']}\n{$_SESSION['selected_type']}";
         $data = array($_SESSION['user']['username'], $_SESSION['user']['email'], $_SESSION['user']['name'],
             $_SESSION['selected_type'], $_SESSION['selected_hour'], $_SESSION['selected_minute'],
             $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
@@ -377,6 +390,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         }
         $_SESSION['step'] = 1;
         $this->clearEventCache();
+        $this->userManagement->reset();
     }
 
     function sendEmail($email, $subject, $template) {
@@ -390,25 +404,22 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         if (!$mail->Send()) return false;
         return true;
     }
-
-    private function actionLogin() {
-        $username = mysql_real_escape_string(t3lib_div::_POST('username'));
-        $password = mysql_real_escape_string(t3lib_div::_POST('password'));
-
-        $res = $this->db->exec_SELECTquery(
-            '*',
-            'fe_users',
-            "username = '$username' and password = '$password'");
-        $user = $this->db->sql_fetch_assoc($res);
-        if ($user == null) {
-            $this->error = 1;
-        } else {
-            $_SESSION['user'] = $user;
+    
+    private function actionLogin(&$data) {
+        $data = array_merge(t3lib_div::_POST(), $data);
+        $result = $this->userManagement->loginUser($data);
+        if ($result->getUser() != null) $_SESSION['user'] = $result->getUser();
+        if ($result->getError() >= 0) $this->error = $result->getError();
+        //this->errorDesc = $result->getErrorString(); // TODO: log?
+        if ($result->getRedirect()) t3lib_utility_Http::redirect($this->pi_getPageLink($GLOBALS['TSFE']->id));
+        foreach ($result->getTemplateVars() as $key => $value) {
+            $this->tpl->assign($key, $value);
         }
-        $this->db->sql_free_result();
     }
 
     private function actionRegister() {
+        $_POST['telephone'] = str_replace(" ", "", $_POST['telephone']);
+        $this->tpl->assign("errorreg", 1);
         $fields = array_merge($this->additionalRegisterUserData, $this->basicRegisterUserData);
         $data = array();
         $post = $this->getEscapedPost();
@@ -420,6 +431,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $value = $post[$field];
             if (empty($value) && in_array($field, $this->requiredRegisterUserData)) {
                 $this->error = 2;
+                $this->tpl->assign("errorfield", implode(", ", $this->requiredRegisterUserData));
                 $this->tpl->assign($field . "_error", 1);
             }
             $data[$field] = $value;
@@ -450,7 +462,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $this->sendEmail($this->conf['adminEmail'],
                 $this->conf['mailSubjectRegisterAdmin'], $this->conf['templateEmailRegisterAdmin']);
         }
-        $this->actionLogin();
+        $this->tpl->assign("errorreg", 0);
+        $this->actionLogin($data);
     }
 
     private function actionStep4() {
@@ -539,8 +552,8 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $query = (!empty($this->conf['storagePid'])) ? "pid = {$this->conf['storagePid']} and " : "";
         $res = $this->db->exec_SELECTquery("*", $this->seasonTableName,
             "hidden = 0 and deleted = 0 and $query " .
-            "(from_month < $month and until_month > $month) or " .
-            "((from_month = $month or until_month = $month) and from_day <= $day and until_day >= $day)"
+            "((from_month < $month and until_month > $month) or " .
+            "((from_month = $month or until_month = $month)) and from_day <= $day and until_day >= $day)"
         );
         $row = $this->db->sql_fetch_assoc($res);
         $this->db->sql_free_result($res);
@@ -569,6 +582,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
     
     private function checkRequired($step) {
         foreach ($this->requiredVars[$step] as $requiredVar) {
+            if ($requiredVar == "password") continue;
             if (!isset($_SESSION[$requiredVar])) {
                 return false;
             }
@@ -635,6 +649,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             if ($_SESSION['date_m'] != $_SESSION['selected_m'] || $_SESSION['date_y'] != $_SESSION['selected_y']) {
                 $this->clearEventCache();
             }
+            
             $tpl_data['timeSlots'] = $this->getSlots(
                 $_SESSION['selected_m'], $_SESSION['selected_d'], $_SESSION['selected_y']);
         }
@@ -658,7 +673,9 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
             $status = 2;
             $cur_m = date("m");
             $cur_y = date("Y");
+            $cur_d = date("j");
             if (($date_y < $cur_y) || ($date_y == $cur_y && $date_m < $cur_m) || ($date_y == $cur_y && $date_m == $cur_m && $i <= $date_d)) $status = 0;
+            if ($date_y == $cur_y && $date_m == $cur_m && $i <= $cur_d) $status = 0;
             else if ($i == $_SESSION['selected_d'] && $date_m == $_SESSION['selected_m'] && $date_y == $_SESSION['selected_y']) $status = 4;
             else {
                 $slots = $this->getSlots($date_m, $i, $date_y);
@@ -683,7 +700,7 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         $days = array();
         $first_weekday_of_month = date('N', mktime(0, 0, 0, $date_m, 1, $date_y));
         for ($i = 0; $i < $first_weekday_of_month; ++$i) {
-            $days[] = array('nr' => 0, 'status' => 3, 'index' => $first_weekday_of_month - $i);
+            $days[] = array('nr' => 0, 'status' => 3, 'index' => $i);
         }
         return ($days);
     }
@@ -723,6 +740,11 @@ class tx_jbxappointmentbooking_pi1 extends tslib_pibase {
         } else {
             unset($_SESSION['user']);
         }
+
+        $userManagementClassName = $this->conf['userManagementImpl'];
+        require_once($userManagementClassName.".php");
+        $this->userManagement = new $userManagementClassName();
+        $this->userManagement->init($this->db, $this->conf);
     }
     
     private function explodeTrimmed($dataStr) {
