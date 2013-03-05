@@ -34,34 +34,34 @@ records as you need.
 Add the TypoScript configuration to the extension template where you installed the plugin.
 
 Required parameters are:
-gcal_username // Google Calendar username
-gcal_password // Google Calendar password
-userGroup // the group which newly registered user will be assigned to
-adminEmail // the e-mail address which will receive notifications about new and cancelled appointments
+: gcal_username // Google Calendar username
+: gcal_password // Google Calendar password
+: userGroup // the group which newly registered user will be assigned to
+: adminEmail // the e-mail address which will receive notifications about new and cancelled appointments
 
 To use an other calendar that the default one:
-Set the calendarEventFeedURI parameter to the Feed URI of the desired calendar.
-You get the basic URI from your Google Calendar account:
-Calendar settings / Calendar Address / XML
-It looks like this: https://www.google.com/calendar/feeds/user/public/basic
-Change the last part of this URI from public/basic to private/full to get the correct Feed URI.
-It should look like this: https://www.google.com/calendar/feeds/user/private/full
+: Set the calendarEventFeedURI parameter to the Feed URI of the desired calendar.
+: You get the basic URI from your Google Calendar account:
+: Calendar settings / Calendar Address / XML
+: It looks like this: https://www.google.com/calendar/feeds/user/public/basic
+: Change the last part of this URI from public/basic to private/full to get the correct Feed URI.
+: It should look like this: https://www.google.com/calendar/feeds/user/private/full
 
 To check if the desired slot is free on additional calendars:
 Add a coma separated list of Feed URIs (see above) of all calendars which should be checked 
 into the additionalFeedURIs parameter.
 
 Other important parameters are:
-slotLength // appointment slot length in minutes
-types // the appointment types which can be selected by the user
-userPID // page id where newly registered users are stored
-autoContinueAfterActions // automatically switch to the next page after valid input, e.g. selectType, select, selectSlot
-additionalRegisterUserData // additional fields for the user registration, e.g. address, city, zip, telephone
-
-storagePid // PID which holds the season data. if set only the specific season will be taken into account. useful for multiple calenders.
+: slotLength // appointment slot length in minutes
+: types // the appointment types which can be selected by the user
+: userPID // page id where newly registered users are stored
+: autoContinueAfterActions // automatically switch to the next page after valid input, e.g. selectType, select, selectSlot
+: additionalRegisterUserData // additional fields for the user registration, e.g. address, city, zip, telephone
+: storagePid // PID which holds the season data. if set only the specific season will be taken into account. useful for multiple calenders.
 
 Following is the default TypoScript configuration:
 
+<code>
 plugin.tx_jbxappointmentbooking_pi1 {
     templateFileStep1 = EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_type.html
     templateFileStep2 = EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html
@@ -98,6 +98,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     requiredRegisterUserData = username, password, email
     additionalFeedURIs = 
 }
+</code>
 
 == Styling ==
 
@@ -106,6 +107,7 @@ Following variables are available in the templates:
 day, month, year, minute, hour, step, type, appointmentId, user.uid, user.email, user.username
 
 Example usage: {$day}
+
 Mind that not all of these variables are available from beginning, but from a specific steps on.
 
 See http://www.smarty.net/docsv2/en/ for further information.
