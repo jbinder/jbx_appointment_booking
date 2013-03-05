@@ -61,7 +61,7 @@ Other important parameters are:
 
 Following is the default TypoScript configuration:
 
-{{{
+{
 plugin.tx_jbxappointmentbooking_pi1 {
     templateFileStep1 = EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_type.html
     templateFileStep2 = EXT:jbx_appointment_booking/tpl/jbx_appointment_booking_month.html
@@ -98,7 +98,7 @@ plugin.tx_jbxappointmentbooking_pi1 {
     requiredRegisterUserData = username, password, email
     additionalFeedURIs = 
 }
-}}}
+}
 
 == Styling ==
 
